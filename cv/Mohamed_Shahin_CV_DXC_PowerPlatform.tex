@@ -1,0 +1,122 @@
+% Mohamed Shahin M — CV tailored for DXC Technology:
+% "Microsoft Power Platform – Technical Consultant" (UAE)
+% ATS-friendly, one page. Standalone LaTeX file (no custom resume.cls needed).
+% Compile with pdfLaTeX on Overleaf or a local TeX installation.
+%
+% Lines marked "% OPTIONAL" contain keywords from the DXC job description.
+% Uncomment them ONLY if they are true for you; interviewers will ask about them.
+
+\documentclass[10pt,a4paper]{article}
+
+\usepackage[T1]{fontenc}
+\usepackage{lmodern}
+\usepackage[margin=0.5in,top=0.45in,bottom=0.45in]{geometry}
+\usepackage{enumitem}
+\usepackage{titlesec}
+\usepackage{hyperref}
+\usepackage{microtype}
+\usepackage{needspace}
+\usepackage{xcolor}
+
+\hyphenpenalty=10000
+\exhyphenpenalty=10000
+\emergencystretch=2em
+\definecolor{sectionblue}{HTML}{203B59}
+\hypersetup{colorlinks=true, urlcolor=sectionblue, linkcolor=sectionblue, pdfauthor={Mohamed Shahin M}, pdftitle={Mohamed Shahin M - Microsoft Power Platform Technical Consultant CV}}
+\urlstyle{same}
+\pagestyle{empty}
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{0pt}
+\setlist[itemize]{leftmargin=1.25em,topsep=1pt,itemsep=0.5pt,parsep=0pt,partopsep=0pt}
+\titlespacing*{\section}{0pt}{6pt}{3pt}
+\titleformat{\section}{\normalsize\bfseries\color{sectionblue}}{}{0pt}{}[\titlerule]
+
+% UAE contact number (optional). Put a number you control between the braces,
+% e.g. \def\DubaiContact{+971 50 123 4567}. It appears in the header labelled
+% "(UAE contact)". Leave empty to hide it entirely.
+\def\DubaiContact{}
+
+\newcommand{\job}[3]{%
+  \Needspace{5\baselineskip}%
+  \textbf{#1}\hfill\textbf{#2}\\
+  \textit{#3}\par\vspace{1pt}
+}
+
+\begin{document}
+\begin{center}
+  {\LARGE\bfseries Mohamed Shahin M}\\[3pt]
+  {\normalsize\bfseries Microsoft Power Platform Technical Consultant $\mid$ Dynamics 365 $\mid$ PL-400 Certified}\\[4pt]
+  Based in India $\mid$ Relocating to Dubai, UAE --- available for in-person interviews at short notice\\[3pt]
+  +91 8113003220 (WhatsApp)%
+  \ifx\DubaiContact\empty\else\ $\mid$ \DubaiContact\ (UAE contact)\fi\\[3pt]
+  \href{mailto:shahinmohamed411@gmail.com}{shahinmohamed411@gmail.com}
+  $\mid$ \href{https://www.linkedin.com/in/mohamedshahinm}{linkedin.com/in/mohamedshahinm}\\[3pt]
+  Notice period: 1 month $\mid$ Immediate joining negotiable
+\end{center}
+\vspace{-6pt}
+
+\section*{Professional Summary}
+Microsoft-certified Power Platform developer (PL-400, PL-300, PL-900) with 2+ years delivering Power Platform and Dynamics~365 solutions for UAE/GCC clients at a Dubai-headquartered Microsoft partner. Hands-on with model-driven Power Apps, Power Automate cloud flows, Power Pages, Copilot Studio and Dataverse, extended with C\# plugins, JavaScript and REST/JSON integrations to Dynamics~365 F\&O, payment gateways and third-party APIs. Comfortable with solution-based ALM and supporting clients from requirements through UAT and go-live; keen to build depth in Dynamics~365 Commerce, retail and POS integration.
+
+\section*{Microsoft Certifications}
+{\small PL-400: Power Platform Developer Associate $\mid$ PL-300: Power BI Data Analyst Associate $\mid$ PL-900: Power Platform Fundamentals\par}
+% OPTIONAL: if you are preparing for PL-200, append  $\mid$ PL-200 (in progress)  inside the braces above.
+
+\section*{Technical Skills}
+% OPTIONAL: if you have built any Canvas App (even a personal/demo one), change
+% "Power Apps (Model-driven)" below to "Power Apps (Canvas \& Model-driven), Power Fx".
+\textbf{Power Platform:} Power Apps (Model-driven), Power Automate (Cloud Flows), Power Pages (Liquid, JavaScript), Copilot Studio, Dataverse (Tables, Relationships, Business Rules, Business Process Flows)\\[2pt]
+\textbf{Dynamics 365:} Customer Engagement (Sales, Service, Leasing), CRM-to-F\&O Integration, C\# Plugins (Dataverse SDK), Plugin Registration Tool, JavaScript Form Scripting, FetchXML, Contact Center (Live Chat), Ribbon Workbench, XrmToolBox\\[2pt]
+\textbf{Integration \& APIs:} REST APIs, JSON, Dataverse Web API (OData v4), OAuth2, DocuSign eSignature API, Network International Payment Gateway\\[2pt]
+\textbf{Azure \& AI:} Azure Functions (C\#), Azure Key Vault, Azure AI Foundry\\[2pt]
+\textbf{ALM \& Delivery:} Solutions, DEV-to-UAT Deployment, Azure DevOps, Git, GitHub, Requirements Analysis, UAT Support\\[2pt]
+\textbf{Data \& Reporting:} Power BI, DAX, DirectQuery, Row-Level Security, Dataverse Data Modelling, SQL, MongoDB\\[2pt]
+\textbf{Programming:} C\#, JavaScript, SQL, Dart/Flutter (iOS/Android), ReactJS, Node.js
+
+\section*{Professional Experience}
+\job{Associate CRM Technical Consultant}{Sep 2024 -- Present}{Maxcient Technologies --- Microsoft Partner (Headquarters: Dubai, UAE) --- On-site, India}
+\begin{itemize}
+  % TODO: add metric --- how many clients/implementations delivered? (e.g. "across 4 UAE/GCC clients")
+  \item Delivered end-to-end Power Platform and Dynamics~365 CE solutions for UAE/GCC clients across Sales, Service and Leasing, translating business requirements into Dataverse data models, model-driven app customisations, automations and integrations through UAT and go-live.
+  % TODO: add metric --- records/day synced and/or number of clients live on the integration
+  \item Built a one-way Dynamics~365 CRM-to-F\&O integration with Power Automate cloud flows, synchronising customers, contracts/leases, products/units and invoices/payments into Dynamics~365 Finance \& Operations; owned field/data mapping, testing and flow monitoring.
+  \item Delivered Power Pages customer-portal features with Liquid and JavaScript, exposing live Dataverse data to external customers for self-service.
+  % TODO: add metric --- contracts sent for signature and/or turnaround time cut (e.g. "from days to minutes")
+  \item Engineered a code-first DocuSign eSignature REST API integration on Azure Functions (C\#) with secrets in Azure Key Vault, letting users send contracts for signature from Dynamics~365 with signing status synced back automatically.
+  % TODO: add metric --- customers onboarded, bookings or payments processed through the app
+  \item Built a customer self-service Flutter app (iOS/Android) for a UAE marina operator --- onboarding, berth booking and online payments via Network International --- integrated with Dynamics~365 through the Dataverse Web API and Azure Functions.
+  \item Developed C\# plugins (Dataverse SDK) to enforce business validation, automate amount calculations and create/update related records server-side across all data-entry channels.
+  \item Wrote JavaScript form scripts (field validation, show/hide sections, requirement levels, auto-populated fields) and an interactive SVG berth map in Dynamics~365 colour-coding availability by occupancy, contract status and bookings from live Dataverse data.
+  % TODO: add metric --- dashboard users and/or the manual process it replaced
+  \item Built Power BI dashboards on Dataverse (DirectQuery, DAX, row-level security) for live occupancy and capacity reporting, and integrated Azure AI Foundry-powered search in Dynamics~365 for instant unit-availability lookups.
+  \item Managed solution-based ALM, packaging and deploying solutions DEV-to-UAT (Key Vault settings, connections) through UAT sign-off; configured Contact Center website live chat and command-bar rules via Ribbon Workbench/XrmToolBox.
+  \item Developing a tenant self-service Flutter app for the company's leasing and sales product --- unit search, enquiries, lease/contract access and invoice payments on a shared Dynamics~365 backend.
+  % OPTIONAL (JD: L1/L2 support) --- uncomment only if true:
+  % \item Provided post-go-live L1/L2 support, triaging user issues, fixing defects across DEV/UAT/PROD and escalating complex cases to senior consultants.
+  % OPTIONAL (JD: environments & security roles) --- uncomment only if true:
+  % \item Configured Power Platform environments, Dataverse security roles and business units to control record access per team.
+  % OPTIONAL (JD: custom connectors) --- uncomment only if true and name the real API:
+  % \item Built a Power Platform custom connector (OpenAPI/REST) so Power Automate flows could call <API name>.
+\end{itemize}
+
+\vspace{2pt}
+\job{Assistant Software Engineer}{Jan 2023 -- Jul 2024}{Hyz Ventures Pvt. Ltd.}
+\begin{itemize}
+  \item Developed full-stack features for the HYZ-Business platform using ReactJS, Node.js, REST APIs and MongoDB within Agile sprints, including code reviews and debugging.
+  % TODO (optional, strengthens an 18-month role): uncomment and fill one concrete line ---
+  % a module/feature you owned end-to-end, its scale (users/requests/data), or stack depth.
+  % \item Owned the <module/feature> end-to-end, from REST API design to React UI, serving <N> users / <N> requests.
+\end{itemize}
+
+\vspace{2pt}
+\textbf{MERN Full Stack Intern}, Futura Labs --- MERN e-commerce application with REST APIs\hfill\textbf{2023}
+
+\section*{Education}
+\textbf{Bachelor of Technology, Electrical and Electronics Engineering}\hfill Jun 2023\\
+Ponnaiyah Ramajayam Institute of Science and Technology, Thanjavur, India\hfill CGPA: 7.5 / 10.0
+
+% OPTIONAL (the JD asks for good English; Arabic is a plus). Uncomment and fill in honestly:
+% \section*{Languages}
+% English (Professional) $\mid$ <Native language> $\mid$ <Other languages> $\mid$ Arabic (<level> --- only if true)
+
+\end{document}

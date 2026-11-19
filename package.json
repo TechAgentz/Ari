@@ -1,0 +1,41 @@
+{
+  "name": "haven-psychology-demo",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Haven — interactive MVP demo of an AI wellbeing conversation companion (guest mode, no payments).",
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "eslint .",
+    "typecheck": "tsc --noEmit",
+    "test:agent": "tsx scripts/agent-smoke-test.ts",
+    "eval:prompt": "tsx --env-file=.env.local scripts/prompt-eval.ts",
+    "test:safety": "tsx scripts/safety-test.ts",
+    "test:voice": "tsx scripts/voice-test.ts",
+    "test": "npm run test:agent && npm run test:strategy && npm run test:safety && npm run test:voice",
+    "test:strategy": "tsx scripts/strategy-test.ts",
+    "eval:scenarios": "tsx --env-file=.env.local scripts/scenario-eval.ts"
+  },
+  "dependencies": {
+    "lucide-react": "^1.74.0",
+    "next": "16.4.6",
+    "react": "^19.3.1",
+    "react-dom": "^19.3.1",
+    "server-only": "^0.0.1"
+  },
+  "devDependencies": {
+    "@tailwindcss/postcss": "^4.3.5",
+    "@types/node": "^22.20.5",
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
+    "eslint": "^9.39.5",
+    "eslint-config-next": "16.4.6",
+    "tailwindcss": "^4.3.5",
+    "tsx": "^4.23.15",
+    "typescript": "^5.9.3"
+  },
+  "engines": {
+    "node": ">=20.9.0"
+  }
+}
