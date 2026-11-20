@@ -1,14 +1,20 @@
 "use client";
 
-import { AudioLines, MessageCircle, MessagesSquare, Search, Trash2 } from "lucide-react";
+import { AudioLines, ChevronRight, MessageCircle, MessagesSquare, Search, Trash2 } from "lucide-react";
 import Link from "next/link";
 import { useMemo, useState } from "react";
-import { ButtonLink } from "@/components/ui/button";
+import { Button, ButtonLink } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/ui/dialog";
 import { Badge, EmptyState, PageHeader } from "@/components/ui/primitives";
 import { useToast } from "@/components/ui/toast";
 import { conversationsStore, deleteConversation, useHydrated } from "@/lib/storage";
 import { cn, conversationSummary, formatRelative } from "@/lib/utils";
+
+const FILTERS = [
+  { v: "all", label: "All" },
+  { v: "chat", label: "Typed" },
+  { v: "voice", label: "Voice" },
+] as const;
 
 export function HistoryScreen() {
   const hydrated = useHydrated();
@@ -27,29 +33,24 @@ export function HistoryScreen() {
   );
 
   return (
-    <div className="mx-auto max-w-4xl px-4 pb-16 pt-8 sm:px-6 lg:px-10 lg:pt-12">
+    <div className="mx-auto max-w-3xl px-5 pb-16 pt-6 sm:px-6 lg:px-10 lg:pt-12">
       <PageHeader
-        eyebrow="Conversation history"
-        title="Your conversations"
-        description="Stored only in this browser. Open one to read it back or carry on where you left off."
-        actions={
-          hydrated && conversations.length > 0 ? (
-            <button type="button" onClick={() => setConfirmClear(true)} className="inline-flex h-10 cursor-pointer items-center gap-2 rounded-full bg-danger-soft px-4 text-sm font-medium text-danger hover:opacity-90">
-              <Trash2 className="h-4 w-4" /> Clear all
-            </button>
-          ) : null
-        }
+        title="Past conversations"
+        description="Saved only on this device. Pick one to read it again or carry on where you left off."
+        actions={hydrated && conversations.length > 0 ? <ButtonLink href="/chat?new=start">New conversation</ButtonLink> : null}
       />
 
       {!hydrated ? null : conversations.length === 0 ? (
         <EmptyState
           icon={<MessagesSquare className="h-6 w-6" />}
           title="No conversations yet"
-          description="When you talk with Ari by text or voice, the conversation is saved here — only on this device."
+          description="When you talk with Ari by voice or by typing, the conversation is saved here, only on this device."
           action={
-            <div className="flex flex-wrap justify-center gap-2">
-              <ButtonLink href="/chat?new=start">Start a conversation</ButtonLink>
-              <ButtonLink href="/settings#data" variant="secondary">
+            <div className="flex flex-col items-center gap-2 sm:flex-row">
+              <ButtonLink href="/chat?new=start" size="lg">
+                Start a conversation
+              </ButtonLink>
+              <ButtonLink href="/settings#data" variant="ghost">
                 Load sample data
               </ButtonLink>
             </div>
@@ -57,68 +58,99 @@ export function HistoryScreen() {
         />
       ) : (
         <>
-          <div className="flex flex-col gap-3 sm:flex-row">
-            <label className="relative flex-1">
+          <div className="flex flex-col gap-3">
+            <label className="relative block">
               <span className="sr-only">Search conversations</span>
-              <Search className="pointer-events-none absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-subtle" />
+              <Search className="pointer-events-none absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-subtle" aria-hidden="true" />
               <input
                 type="search"
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
                 placeholder="Search your conversations"
-                className="h-11 w-full rounded-full border border-border bg-surface pl-12 pr-4 text-base outline-none focus:ring-2 focus:ring-primary/30"
+                className="h-13 w-full rounded-full border border-border-strong bg-surface pl-12 pr-4 text-base text-fg placeholder:text-subtle outline-none focus-visible:border-primary focus-visible:ring-2 focus-visible:ring-ring"
               />
             </label>
-            <div className="flex rounded-full border border-border bg-surface p-1" role="group" aria-label="Filter by type">
-              {(["all", "chat", "voice"] as const).map((f) => (
+            <div className="flex rounded-full border border-border bg-surface-2 p-1" role="group" aria-label="Filter by type">
+              {FILTERS.map((f) => (
                 <button
-                  key={f}
+                  key={f.v}
                   type="button"
-                  aria-pressed={filter === f}
-                  onClick={() => setFilter(f)}
-                  className={cn("h-9 cursor-pointer rounded-full px-4 text-sm font-medium capitalize transition-colors", filter === f ? "bg-fg text-bg" : "text-muted hover:text-fg")}
+                  aria-pressed={filter === f.v}
+                  onClick={() => setFilter(f.v)}
+                  className={cn(
+                    "h-11 flex-1 cursor-pointer rounded-full px-4 text-[0.9375rem] font-semibold transition-colors duration-200",
+                    filter === f.v ? "bg-surface text-fg shadow-soft" : "text-muted hover:text-fg",
+                  )}
                 >
-                  {f}
+                  {f.label}
                 </button>
               ))}
             </div>
           </div>
 
-          <ul className="mt-6 space-y-3">
+          <p className="mt-5 text-sm text-muted" aria-live="polite">
+            {list.length === conversations.length ? `${conversations.length} ${conversations.length === 1 ? "conversation" : "conversations"}` : `${list.length} of ${conversations.length} shown`}
+          </p>
+
+          <ul className="mt-3 space-y-3">
             {list.map((c, i) => {
               const summary = summaries.get(c.id) ?? conversationSummary(c);
               const turns = c.messages.filter((m) => m.role === "user").length;
               return (
-                <li key={c.id} className="group relative animate-fade-up" style={{ animationDelay: `${Math.min(i, 8) * 30}ms` }}>
-                  <Link href={`/chat?id=${c.id}`} className="flex items-start gap-4 rounded-3xl border border-border bg-surface/90 p-5 pr-16 shadow-soft transition-shadow hover:shadow-lift">
-                    <span className={cn("flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl", c.mode === "voice" ? "bg-accent-soft text-accent" : "bg-primary-soft text-primary")}>
-                      {c.mode === "voice" ? <AudioLines className="h-5 w-5" /> : <MessageCircle className="h-5 w-5" />}
+                <li
+                  key={c.id}
+                  className="animate-fade-up rounded-3xl border border-border bg-surface shadow-soft"
+                  style={{ animationDelay: `${Math.min(i, 8) * 30}ms` }}
+                >
+                  <Link href={`/chat?id=${c.id}`} className="flex items-start gap-4 rounded-t-3xl p-4 pb-3 sm:p-5 sm:pb-3">
+                    <span
+                      className={cn(
+                        "flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl",
+                        c.mode === "voice" ? "bg-accent-soft text-accent" : "bg-primary-soft text-primary",
+                      )}
+                    >
+                      {c.mode === "voice" ? <AudioLines className="h-5 w-5" aria-hidden="true" /> : <MessageCircle className="h-5 w-5" aria-hidden="true" />}
+                      <span className="sr-only">{c.mode === "voice" ? "Voice conversation" : "Typed conversation"}</span>
                     </span>
                     <div className="min-w-0 flex-1">
-                      <div className="flex flex-wrap items-center gap-2">
-                        <h2 className="truncate font-semibold">{summary.title}</h2>
-                        {c.sample && <Badge tone="warm">Fictional sample</Badge>}
-                        {c.messages.some((m) => m.meta?.safety === "crisis") && <Badge tone="danger">Support shared</Badge>}
-                      </div>
-                      <p className={cn("mt-1 line-clamp-2 text-sm text-muted", summary.sensitive && "italic")}>{summary.preview}</p>
-                      <p className="mt-2 text-xs text-subtle">
-                        {formatRelative(c.updatedAt)} · {turns} {turns === 1 ? "message" : "messages"} from you · {c.mode === "voice" ? "Voice" : "Text"}
+                      <h2 className="line-clamp-2 text-base font-semibold leading-snug text-fg">{summary.title}</h2>
+                      <p className="mt-0.5 text-sm text-muted">
+                        {formatRelative(c.updatedAt)} · {turns} {turns === 1 ? "message" : "messages"} from you
                       </p>
+                      <p className={cn("mt-2 line-clamp-2 text-[0.9375rem] leading-relaxed text-muted", summary.sensitive && "italic")}>{summary.preview}</p>
+                      {(c.sample || c.messages.some((m) => m.meta?.safety === "crisis")) && (
+                        <div className="mt-2 flex flex-wrap gap-2">
+                          {c.sample && <Badge tone="warm">Fictional sample</Badge>}
+                          {c.messages.some((m) => m.meta?.safety === "crisis") && <Badge tone="danger">Support shared</Badge>}
+                        </div>
+                      )}
                     </div>
                   </Link>
-                  <button
-                    type="button"
-                    onClick={() => setPendingDelete(c.id)}
-                    aria-label={`Delete conversation: ${summary.title}`}
-                    className="absolute right-4 top-4 flex h-10 w-10 cursor-pointer items-center justify-center rounded-full text-subtle hover:bg-danger-soft hover:text-danger"
-                  >
-                    <Trash2 className="h-4.5 w-4.5" />
-                  </button>
+                  <div className="flex items-center justify-between gap-2 border-t border-border px-3 py-2 sm:px-4">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => setPendingDelete(c.id)}
+                      aria-label={`Delete conversation: ${summary.title}`}
+                      className="hover:!bg-danger-soft hover:!text-danger"
+                    >
+                      <Trash2 className="h-4.5 w-4.5" aria-hidden="true" /> Delete
+                    </Button>
+                    <ButtonLink href={`/chat?id=${c.id}`} variant="soft" size="sm" aria-label={`Continue conversation: ${summary.title}`}>
+                      Continue <ChevronRight className="h-4.5 w-4.5" aria-hidden="true" />
+                    </ButtonLink>
+                  </div>
                 </li>
               );
             })}
           </ul>
-          {list.length === 0 && <p className="mt-8 text-center text-sm text-muted">No conversations match your search.</p>}
+          {list.length === 0 && <p className="mt-8 text-center text-base text-muted">No conversations match your search.</p>}
+
+          <div className="mt-10 flex justify-center border-t border-border pt-6">
+            <Button variant="danger" onClick={() => setConfirmClear(true)}>
+              <Trash2 className="h-4.5 w-4.5" aria-hidden="true" /> Clear all conversations
+            </Button>
+          </div>
         </>
       )}
 

@@ -74,7 +74,7 @@ export function detectInputMode(config: ServerConfig | null, settings?: Settings
 
 function typingNotice(config: ServerConfig | null): string {
   return serverSttAvailable(config)
-    ? "This browser has no built-in speech recognition, and recordings are only sent to Groq Whisper when smart replies are on. You can type your replies and Ari will still speak."
+    ? "This browser has no built-in speech recognition, and Groq Whisper isn't available right now. You can type your replies and Ari will still speak."
     : "Voice input isn't supported in this browser — you can type your replies and Ari will still speak.";
 }
 

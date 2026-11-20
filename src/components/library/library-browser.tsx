@@ -1,13 +1,41 @@
 "use client";
 
-import { ArrowUpRight, Clock, Search, Sparkles } from "lucide-react";
+import {
+  Brain,
+  ChevronRight,
+  Clock,
+  CloudSun,
+  HeartHandshake,
+  type LucideIcon,
+  Moon,
+  Search,
+  Sparkles,
+  Users,
+  Wind,
+  X,
+  Leaf,
+} from "lucide-react";
 import Link from "next/link";
 import { useMemo, useState } from "react";
+import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/primitives";
 import { KNOWLEDGE_BASE, KNOWLEDGE_CATEGORIES, type KnowledgeCategory } from "@/lib/knowledge/base";
 import { categoryTone } from "@/lib/knowledge/category-tone";
 import { retrieveKnowledge } from "@/lib/knowledge/retrieve";
 import { cn } from "@/lib/utils";
+
+const CATEGORY_ICON: Record<KnowledgeCategory, LucideIcon> = {
+  "Stress & Anxiety": Wind,
+  "Mood & Emotions": CloudSun,
+  "Sleep & Energy": Moon,
+  Relationships: Users,
+  "Thinking Patterns": Brain,
+  "Skills & Practices": Leaf,
+  "Getting Support": HeartHandshake,
+};
+
+const chipBase =
+  "inline-flex h-12 shrink-0 cursor-pointer items-center gap-2 rounded-full px-4 text-[0.9375rem] font-medium transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring";
 
 export function LibraryBrowser() {
   const [query, setQuery] = useState("");
@@ -26,85 +54,118 @@ export function LibraryBrowser() {
     return list;
   }, [query, category, techniquesOnly]);
 
+  const filtered = query.trim().length > 0 || category !== "All" || techniquesOnly;
+  const clearAll = () => {
+    setQuery("");
+    setCategory("All");
+    setTechniquesOnly(false);
+  };
+
   return (
     <div>
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
-        <label className="relative flex-1">
-          <span className="sr-only">Search the library</span>
-          <Search className="pointer-events-none absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-subtle" />
-          <input
-            type="search"
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            placeholder="Try “can't sleep”, “exam stress” or “lonely”"
-            className="h-12 w-full rounded-full border border-border bg-surface pl-12 pr-4 text-base shadow-soft outline-none focus:ring-2 focus:ring-primary/30"
-          />
-        </label>
+      <label className="relative block">
+        <span className="sr-only">Search exercises and guides</span>
+        <Search className="pointer-events-none absolute left-5 top-1/2 h-5 w-5 -translate-y-1/2 text-muted" aria-hidden />
+        <input
+          type="search"
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+          placeholder="What's on your mind? e.g. can't sleep"
+          className="h-14 w-full rounded-full border border-border-strong bg-surface pl-13 pr-14 text-base text-fg shadow-soft outline-none placeholder:text-muted focus:border-primary focus:ring-2 focus:ring-ring [&::-webkit-search-cancel-button]:hidden"
+        />
+        {query && (
+          <button
+            type="button"
+            onClick={() => setQuery("")}
+            aria-label="Clear search"
+            className="absolute right-1 top-1/2 flex h-12 w-12 -translate-y-1/2 cursor-pointer items-center justify-center rounded-full text-muted hover:bg-surface-2 hover:text-fg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+          >
+            <X className="h-5 w-5" aria-hidden />
+          </button>
+        )}
+      </label>
+
+      <div className="scrollbar-thin -mx-5 mt-4 flex gap-2 overflow-x-auto px-5 pb-2 sm:mx-0 sm:flex-wrap sm:px-0" role="group" aria-label="Filter by topic">
+        {(["All", ...KNOWLEDGE_CATEGORIES] as const).map((c) => {
+          const active = category === c;
+          const Icon = c === "All" ? null : CATEGORY_ICON[c];
+          return (
+            <button
+              key={c}
+              type="button"
+              aria-pressed={active}
+              onClick={() => setCategory(c)}
+              className={cn(chipBase, active ? "bg-primary text-primary-fg shadow-soft" : "bg-surface text-fg ring-1 ring-border-strong hover:bg-surface-2")}
+            >
+              {Icon && <Icon className="h-[1.125rem] w-[1.125rem]" aria-hidden />}
+              {c === "All" ? "All topics" : c}
+            </button>
+          );
+        })}
+      </div>
+
+      <div className="mt-4 flex flex-wrap items-center justify-between gap-3">
+        <p className="text-base text-muted" aria-live="polite">
+          {results.length} {results.length === 1 ? "result" : "results"}
+        </p>
         <button
           type="button"
           aria-pressed={techniquesOnly}
           onClick={() => setTechniquesOnly((v) => !v)}
-          className={cn(
-            "inline-flex h-12 cursor-pointer items-center justify-center gap-2 rounded-full border px-5 text-sm font-medium transition-colors",
-            techniquesOnly ? "border-primary bg-primary-soft" : "border-border bg-surface hover:bg-surface-2",
-          )}
+          className={cn(chipBase, techniquesOnly ? "bg-accent-soft text-fg ring-2 ring-accent" : "bg-transparent text-fg ring-1 ring-border-strong hover:bg-surface-2")}
         >
-          <Sparkles className="h-4 w-4 text-accent" /> Techniques only
+          <Sparkles className="h-[1.125rem] w-[1.125rem] text-accent" aria-hidden /> Exercises only
         </button>
       </div>
 
-      <div className="scrollbar-thin -mx-4 mt-4 flex gap-2 overflow-x-auto px-4 pb-2" role="group" aria-label="Filter by category">
-        {(["All", ...KNOWLEDGE_CATEGORIES] as const).map((c) => (
-          <button
-            key={c}
-            type="button"
-            aria-pressed={category === c}
-            onClick={() => setCategory(c)}
-            className={cn(
-              "h-9 shrink-0 cursor-pointer rounded-full px-4 text-sm font-medium transition-colors",
-              category === c ? "bg-fg text-bg" : "bg-surface text-muted ring-1 ring-border hover:text-fg",
-            )}
-          >
-            {c}
-          </button>
-        ))}
-      </div>
-
-      <p className="mt-4 text-sm text-subtle" aria-live="polite">
-        {results.length} {results.length === 1 ? "article" : "articles"}
-      </p>
-
       {results.length === 0 ? (
-        <div className="mt-4">
-          <EmptyState icon={<Search className="h-6 w-6" />} title="Nothing matched" description="Try different words, or ask Ari about it in a conversation." />
+        <div className="mt-6">
+          <EmptyState
+            icon={<Search className="h-6 w-6" />}
+            title="Nothing matched"
+            description="Try different words, or ask Ari about it in a conversation."
+            action={
+              filtered ? (
+                <Button variant="secondary" onClick={clearAll}>
+                  Clear search and filters
+                </Button>
+              ) : undefined
+            }
+          />
         </div>
       ) : (
-        <ul className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {results.map((e, i) => (
-            <li key={e.slug} className="animate-fade-up" style={{ animationDelay: `${Math.min(i, 8) * 35}ms` }}>
-              <Link
-                href={`/library/${e.slug}`}
-                className="group flex h-full flex-col rounded-3xl border border-border bg-surface/90 p-5 shadow-soft transition-all duration-300 hover:-translate-y-0.5 hover:shadow-lift"
-              >
-                <div className="flex items-center justify-between gap-2">
-                  <span className={cn("rounded-full px-2.5 py-1 text-xs font-medium", categoryTone(e.category))}>{e.category}</span>
-                  <ArrowUpRight className="h-4 w-4 text-subtle transition-transform group-hover:-translate-y-0.5 group-hover:translate-x-0.5 group-hover:text-primary" />
-                </div>
-                <h2 className="mt-4 font-serif text-lg font-semibold leading-snug">{e.title}</h2>
-                <p className="mt-2 flex-1 text-sm leading-relaxed text-muted">{e.summary}</p>
-                <div className="mt-4 flex items-center gap-3 text-xs text-subtle">
-                  <span className="inline-flex items-center gap-1">
-                    <Clock className="h-3.5 w-3.5" /> {e.readMinutes} min read
+        <ul className="mt-5 grid gap-3 sm:grid-cols-2 sm:gap-4 lg:grid-cols-3">
+          {results.map((e, i) => {
+            const Icon = CATEGORY_ICON[e.category];
+            return (
+              <li key={e.slug} className="animate-fade-up" style={{ animationDelay: `${Math.min(i, 8) * 35}ms` }}>
+                <Link
+                  href={`/library/${e.slug}`}
+                  className="group flex h-full min-h-28 items-start gap-4 rounded-3xl border border-border bg-surface p-5 shadow-soft transition-[box-shadow,transform,border-color] duration-200 ease-out hover:-translate-y-0.5 hover:border-border-strong hover:shadow-lift focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                >
+                  <span className={cn("flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl", categoryTone(e.category))}>
+                    <Icon className="h-6 w-6" aria-hidden />
                   </span>
-                  {e.technique && (
-                    <span className="inline-flex items-center gap-1 text-accent">
-                      <Sparkles className="h-3.5 w-3.5" /> {e.technique.name}
+                  <span className="min-w-0 flex-1">
+                    <span className="block text-[1.0625rem] font-semibold leading-snug text-fg">{e.title}</span>
+                    <span className="mt-1 line-clamp-2 block text-[0.9375rem] leading-normal text-muted">{e.summary}</span>
+                    <span className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-muted">
+                      <span className="inline-flex items-center gap-1.5">
+                        <Clock className="h-4 w-4" aria-hidden />
+                        {e.technique ? e.technique.duration : `${e.readMinutes} min read`}
+                      </span>
+                      {e.technique && (
+                        <span className="inline-flex items-center gap-1.5 font-medium text-accent">
+                          <Sparkles className="h-4 w-4" aria-hidden /> Exercise
+                        </span>
+                      )}
                     </span>
-                  )}
-                </div>
-              </Link>
-            </li>
-          ))}
+                  </span>
+                  <ChevronRight className="mt-3 h-5 w-5 shrink-0 text-muted transition-transform group-hover:translate-x-0.5 group-hover:text-primary" aria-hidden />
+                </Link>
+              </li>
+            );
+          })}
         </ul>
       )}
     </div>

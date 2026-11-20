@@ -1,6 +1,6 @@
 "use client";
 
-import { ArrowUp, Mic, Square } from "lucide-react";
+import { Mic, SendHorizontal, Square } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { VoiceConsentDialog } from "@/components/voice-consent";
 import { LIMITS } from "@/lib/config";
@@ -99,11 +99,18 @@ export function Composer({
   return (
     <div>
       {(dictating || dictationError) && (
-        <p className={cn("mb-2 px-2 text-sm", dictationError ? "text-danger" : "text-muted")} aria-live="polite">
+        <p
+          className={cn(
+            "mb-2 flex items-center gap-2 rounded-2xl px-4 py-2 text-base",
+            dictationError ? "bg-danger-soft text-danger" : "bg-primary-soft text-fg",
+          )}
+          aria-live="polite"
+        >
+          {!dictationError && <Mic className="h-4 w-4 shrink-0 animate-pulse text-primary" aria-hidden />}
           {dictationError ?? (interim ? <span className="italic">“{interim}”</span> : "Listening… speak, then pause.")}
         </p>
       )}
-      <div className="flex items-end gap-2 rounded-[1.75rem] border border-border bg-surface p-2 shadow-soft transition-shadow focus-within:shadow-lift focus-within:ring-2 focus-within:ring-primary/25">
+      <div className="flex items-end gap-1.5 rounded-[1.75rem] border border-border-strong bg-surface p-1.5 shadow-soft transition-shadow focus-within:border-primary focus-within:shadow-lift focus-within:ring-2 focus-within:ring-ring/30">
         {canDictate && (
           <button
             type="button"
@@ -111,12 +118,13 @@ export function Composer({
             disabled={busy || disabled}
             aria-label={dictating ? "Stop dictation" : "Dictate with your voice"}
             aria-pressed={dictating}
+            title={dictating ? "Stop dictation" : "Speak instead of typing"}
             className={cn(
-              "flex h-11 w-11 shrink-0 cursor-pointer items-center justify-center rounded-full transition-colors disabled:opacity-40",
+              "mb-0.5 flex h-12 w-12 shrink-0 cursor-pointer items-center justify-center rounded-full transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-40",
               dictating ? "bg-danger-soft text-danger" : "text-muted hover:bg-surface-2 hover:text-fg",
             )}
           >
-            <Mic className={cn("h-5 w-5", dictating && "animate-pulse")} />
+            {dictating ? <Square className="h-4 w-4 fill-current" /> : <Mic className="h-5 w-5" />}
           </button>
         )}
         <label htmlFor="composer" className="sr-only">
@@ -129,6 +137,7 @@ export function Composer({
           value={value}
           maxLength={LIMITS.maxMessageChars}
           disabled={disabled}
+          enterKeyHint="send"
           onChange={(e) => onChange(e.target.value)}
           onKeyDown={(e) => {
             if (e.key === "Enter" && !e.shiftKey && !e.nativeEvent.isComposing) {
@@ -136,15 +145,19 @@ export function Composer({
               submit();
             }
           }}
-          placeholder="Share what's on your mind…"
-          className="max-h-[180px] min-h-11 flex-1 resize-none bg-transparent px-2 py-2.5 text-base leading-relaxed text-fg outline-none placeholder:text-subtle focus-visible:outline-none"
+          placeholder={disabled ? "Getting ready…" : "Type a message…"}
+          className={cn(
+            "max-h-[180px] min-h-[52px] flex-1 resize-none bg-transparent py-3.5 text-base leading-relaxed text-fg outline-none placeholder:text-subtle focus-visible:outline-none sm:text-[1.0625rem]",
+            canDictate ? "px-1" : "px-3",
+          )}
         />
         {busy ? (
           <button
             type="button"
             onClick={onStop}
             aria-label="Stop reply"
-            className="flex h-11 w-11 shrink-0 cursor-pointer items-center justify-center rounded-full bg-fg text-bg transition-transform active:scale-95"
+            title="Stop reply"
+            className="mb-0.5 flex h-12 w-12 shrink-0 cursor-pointer items-center justify-center rounded-full bg-fg text-bg transition-transform focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 active:scale-95"
           >
             <Square className="h-4 w-4 fill-current" />
           </button>
@@ -154,13 +167,14 @@ export function Composer({
             onClick={submit}
             disabled={!value.trim() || disabled}
             aria-label="Send message"
-            className="flex h-11 w-11 shrink-0 cursor-pointer items-center justify-center rounded-full bg-primary text-primary-fg shadow-soft transition-all hover:bg-primary-hover active:scale-95 disabled:cursor-not-allowed disabled:opacity-35"
+            title="Send"
+            className="mb-0.5 flex h-12 w-12 shrink-0 cursor-pointer items-center justify-center rounded-full bg-primary text-primary-fg shadow-soft transition-all hover:bg-primary-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 active:scale-95 disabled:cursor-not-allowed disabled:bg-surface-3 disabled:text-subtle disabled:shadow-none"
           >
-            <ArrowUp className="h-5 w-5" strokeWidth={2.4} />
+            <SendHorizontal className="h-5 w-5" strokeWidth={2.2} />
           </button>
         )}
       </div>
-      {remaining < 200 && <p className="mt-1 px-3 text-right text-xs text-subtle">{remaining} characters left</p>}
+      {remaining < 200 && <p className="mt-1.5 px-3 text-right text-sm text-muted" aria-live="polite">{remaining} characters left</p>}
       <VoiceConsentDialog
         open={consentOpen}
         onClose={() => setConsentOpen(false)}

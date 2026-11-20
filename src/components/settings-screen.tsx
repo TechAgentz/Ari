@@ -1,9 +1,27 @@
 "use client";
 
-import { CheckCircle2, CircleAlert, CreditCard, Download, Loader2, Monitor, Moon, Play, RotateCcw, Sun, Trash2, UserRound } from "lucide-react";
+import {
+  CheckCircle2,
+  ChevronDown,
+  CircleAlert,
+  CreditCard,
+  Database,
+  Download,
+  Loader2,
+  Monitor,
+  Moon,
+  Play,
+  RotateCcw,
+  Sparkles,
+  Sun,
+  Trash2,
+  UserRound,
+  type LucideIcon,
+} from "lucide-react";
 import { useEffect, useState, type ReactNode } from "react";
+import { Button } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/ui/dialog";
-import { Card, PageHeader, Switch } from "@/components/ui/primitives";
+import { PageHeader, Switch } from "@/components/ui/primitives";
 import { useToast } from "@/components/ui/toast";
 import { usesRemoteAI } from "@/lib/agent/client";
 import { APP, DISCLAIMER, FEATURES, LIMITS } from "@/lib/config";
@@ -15,15 +33,110 @@ import { cn, now } from "@/lib/utils";
 import { voiceEngine } from "@/lib/voice/controller";
 import { Speaker, listVoices, pickVoice, voicesReady } from "@/lib/voice/speaker";
 
-function Section({ id, title, description, children }: { id?: string; title: string; description?: string; children: ReactNode }) {
+/** iOS-style grouped section: a small heading, a rounded card of rows, and an optional footnote. */
+function Group({ id, title, footer, children }: { id?: string; title: string; footer?: ReactNode; children: ReactNode }) {
+  const headingId = `${id ?? title.toLowerCase().replace(/[^a-z]+/g, "-")}-title`;
   return (
-    <Card id={id} className="scroll-mt-24 p-6 sm:p-7">
-      <h2 className="font-serif text-xl font-semibold">{title}</h2>
-      {description && <p className="mt-1 text-sm leading-relaxed text-muted">{description}</p>}
-      <div className="mt-4">{children}</div>
-    </Card>
+    <section id={id} aria-labelledby={headingId} className="scroll-mt-24">
+      <h2 id={headingId} className="mb-2 px-1 text-lg font-semibold text-fg">
+        {title}
+      </h2>
+      <div className="divide-y divide-border overflow-hidden rounded-3xl border border-border bg-surface px-4 shadow-soft sm:px-5">{children}</div>
+      {footer && <div className="mt-2 px-1 text-sm leading-relaxed text-muted">{footer}</div>}
+    </section>
   );
 }
+
+/** A row with a label above its control (for pickers, sliders and selects). */
+function Row({ label, htmlFor, value, description, children }: { label: string; htmlFor?: string; value?: ReactNode; description?: ReactNode; children?: ReactNode }) {
+  const Label = htmlFor ? "label" : "p";
+  return (
+    <div className="py-4">
+      <Label {...(htmlFor ? { htmlFor } : {})} className="flex items-center justify-between gap-3 text-base font-medium text-fg">
+        {label}
+        {value != null && <span className="text-[0.9375rem] font-normal tabular-nums text-muted">{value}</span>}
+      </Label>
+      {children && <div className="mt-3">{children}</div>}
+      {description && <p className="mt-2 text-sm leading-relaxed text-muted">{description}</p>}
+    </div>
+  );
+}
+
+/** Full-width tappable row, like an iOS settings action. */
+function ActionRow({
+  icon: Icon,
+  label,
+  onClick,
+  disabled,
+  tone = "default",
+  trailing,
+}: {
+  icon: LucideIcon;
+  label: string;
+  onClick: () => void;
+  disabled?: boolean;
+  tone?: "default" | "danger";
+  trailing?: ReactNode;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      disabled={disabled}
+      className={cn(
+        "-mx-4 flex min-h-14 w-[calc(100%+2rem)] cursor-pointer items-center gap-3 px-4 text-left text-base font-medium transition-colors duration-200 hover:bg-surface-2 disabled:cursor-not-allowed disabled:opacity-45 sm:-mx-5 sm:w-[calc(100%+2.5rem)] sm:px-5",
+        tone === "danger" ? "text-danger" : "text-fg",
+      )}
+    >
+      <span className={cn("flex h-9 w-9 shrink-0 items-center justify-center rounded-xl", tone === "danger" ? "bg-danger-soft" : "bg-primary-soft text-primary")}>
+        <Icon className="h-5 w-5" aria-hidden="true" />
+      </span>
+      <span className="flex-1">{label}</span>
+      {trailing}
+    </button>
+  );
+}
+
+/** Choice pills that wrap; each one is a 48px pressable button. */
+function Choices<T extends string>({
+  label,
+  options,
+  isSelected,
+  onSelect,
+}: {
+  label: string;
+  options: { v: T; label: string; disabled?: boolean }[];
+  isSelected: (v: T) => boolean;
+  onSelect: (v: T) => void;
+}) {
+  return (
+    <div className="grid gap-2 sm:grid-cols-2" role="group" aria-label={label}>
+      {options.map((o) => {
+        const selected = isSelected(o.v);
+        return (
+          <button
+            key={o.v}
+            type="button"
+            disabled={o.disabled}
+            aria-pressed={selected}
+            onClick={() => onSelect(o.v)}
+            className={cn(
+              "flex min-h-12 cursor-pointer items-center gap-2 rounded-2xl border-2 px-4 text-left text-[0.9375rem] font-semibold transition-colors duration-200 disabled:cursor-not-allowed disabled:opacity-45",
+              selected ? "border-primary bg-primary-soft text-fg" : "border-border text-fg hover:bg-surface-2",
+            )}
+          >
+            <span className={cn("flex h-5 w-5 shrink-0 items-center justify-center rounded-full border-2", selected ? "border-primary" : "border-border-strong")} aria-hidden="true">
+              {selected && <span className="h-2.5 w-2.5 rounded-full bg-primary" />}
+            </span>
+            {o.label}
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
+const rangeClass = "h-12 w-full cursor-pointer accent-[var(--primary)]";
 
 type Confirm = null | "conversations" | "moods" | "everything";
 
@@ -66,7 +179,7 @@ function SettingsInner() {
       const json = (await res.json()) as { check?: { ok: boolean; error?: string; warning?: string } };
       setCheck(
         json.check?.ok
-          ? { state: "ok", message: `Connected to Groq — the models are available.${json.check.warning ? ` ${json.check.warning}` : ""}` }
+          ? { state: "ok", message: `Connected to Groq. The models are available.${json.check.warning ? ` ${json.check.warning}` : ""}` }
           : { state: "fail", message: json.check?.error ?? "Check failed." },
       );
       void fetchServerConfig(true);
@@ -92,168 +205,73 @@ function SettingsInner() {
   };
 
   return (
-    <div className="mx-auto max-w-3xl px-4 pb-16 pt-8 sm:px-6 lg:pt-12">
-      <PageHeader eyebrow="Settings" title="Your space, your choices" description="Control how replies are generated, what's shared, how voice works, and the data stored in this browser." />
+    <div className="mx-auto max-w-2xl px-5 pb-16 pt-6 sm:px-6 lg:pt-12">
+      <PageHeader title="Settings" description="Choose how Ari sounds, what's shared, and what's kept on this device." />
 
-      <div className="space-y-6">
-        {/* AI provider */}
-        <Section title="Smart replies" description={`${APP.companion}'s replies are generated by Groq.`}>
-          <dl className="grid grid-cols-2 gap-3 rounded-2xl bg-surface-2 p-4 text-sm sm:grid-cols-4">
-            <div>
-              <dt className="text-xs text-muted">Server provider</dt>
-              <dd className="mt-0.5 font-medium">{loading ? "…" : config?.provider === "groq" ? "Groq" : "Demo"}</dd>
-            </div>
-            <div>
-              <dt className="text-xs text-muted">Chat model</dt>
-              <dd className="mt-0.5 truncate font-medium" title={config?.model}>
-                {loading ? "…" : (config?.model ?? "—")}
-              </dd>
-            </div>
-            <div>
-              <dt className="text-xs text-muted">API key</dt>
-              <dd className="mt-0.5 font-medium">{loading ? "…" : groq ? "Set (server only)" : "Not set"}</dd>
-            </div>
-            <div>
-              <dt className="text-xs text-muted">Now answering</dt>
-              <dd className="mt-0.5 font-medium">{remote ? "Groq" : "Backup replies (Groq not set up)"}</dd>
-            </div>
-          </dl>
-          {config?.misconfigured && <p className="mt-3 text-sm text-warm">AI_PROVIDER is set to “groq” but no GROQ_API_KEY was found, so the server is using demo mode.</p>}
-          <div className="mt-4 flex flex-wrap items-center gap-3">
-            <button type="button" onClick={() => void testConnection()} disabled={check.state === "checking"} className="inline-flex h-10 cursor-pointer items-center gap-2 rounded-full border border-border px-4 text-sm font-medium hover:bg-surface-2 disabled:opacity-50">
-              {check.state === "checking" ? <Loader2 className="h-4 w-4 animate-spin" /> : <RotateCcw className="h-4 w-4" />}
-              Test connection
-            </button>
-            {check.state === "ok" && (
-              <span className="inline-flex items-center gap-1.5 text-sm text-success">
-                <CheckCircle2 className="h-4 w-4" /> {check.message}
-              </span>
-            )}
-            {check.state === "fail" && (
-              <span className="inline-flex items-center gap-1.5 text-sm text-danger">
-                <CircleAlert className="h-4 w-4" /> {check.message}
-              </span>
-            )}
-          </div>
-          <p className="mt-3 text-xs text-subtle">If Groq is busy or unreachable mid-conversation, Ari answers with a short backup reply so the conversation isn&apos;t interrupted.</p>
-        </Section>
-
-        {/* Privacy */}
-        <Section title="Privacy & consent" description="Conversations are stored only in this browser.">
-          <p className="mb-2 text-sm leading-relaxed text-muted">
-            To generate each reply, your last {LIMITS.contextWindow} messages (and, in voice, your recording) are sent to Groq after emails, phone numbers, addresses and similar identifiers are removed. Nothing is stored on a server.
-          </p>
-          <div className="divide-y divide-border">
-            <Switch
-              id="consent-context"
-              label="Share remembered personal context"
-              description={`Lets ${APP.companion} include a short summary of things you've shared (like your first name, who you live with, or hobbies) so replies stay personal in long conversations. Off by default.`}
-              checked={settings.consent.context}
-              disabled={!groq}
-              onChange={(v) => set((s) => ({ ...s, consent: { ...s.consent, context: v, decidedAt: now() } }))}
-            />
-            <Switch
-              id="consent-voice"
-              label="Voice input"
-              description="Allows using your microphone. Speech is converted to text by your browser's speech service (or Groq Whisper as a fallback). Audio is never saved."
-              checked={settings.consent.voice}
-              onChange={(v) => set((s) => ({ ...s, consent: { ...s.consent, voice: v, decidedAt: now() } }))}
-            />
-          </div>
-          <p className="mt-3 text-xs leading-relaxed text-subtle">
-            Messages that suggest someone may be in immediate danger are never sent to Groq — {APP.companion} responds with crisis resources directly.
-          </p>
-        </Section>
-
+      <div className="space-y-8">
         {/* Voice */}
-        <Section title="Voice" description="How Ari sounds in voice conversations.">
-          <div className="divide-y divide-border">
-            <Switch id="voice-output" label="Speak replies aloud" checked={settings.voice.output} onChange={(v) => set((s) => ({ ...s, voice: { ...s.voice, output: v } }))} />
-            <Switch
-              id="voice-check-ins"
-              label="Ari checks in when you're quiet"
-              description="If you don't say anything for a while, Ari gently asks an easy question — at most twice in a row, then waits."
-              checked={settings.voice.checkIns}
-              onChange={(v) => set((s) => ({ ...s, voice: { ...s.voice, checkIns: v } }))}
+        <Group id="voice" title="Voice">
+          <Switch id="voice-output" label="Speak replies aloud" checked={settings.voice.output} onChange={(v) => set((s) => ({ ...s, voice: { ...s.voice, output: v } }))} />
+          <Switch
+            id="voice-check-ins"
+            label="Ari checks in when you're quiet"
+            description="If you don't say anything for a while, Ari gently asks an easy question, at most twice in a row, then waits."
+            checked={settings.voice.checkIns}
+            onChange={(v) => set((s) => ({ ...s, voice: { ...s.voice, checkIns: v } }))}
+          />
+          {settings.voice.checkIns && (
+            <Row label="Wait before checking in" htmlFor="voice-check-in-seconds" value={`${settings.voice.checkInSeconds}s`}>
+              <input
+                id="voice-check-in-seconds"
+                type="range"
+                min={5}
+                max={20}
+                step={1}
+                value={settings.voice.checkInSeconds}
+                onChange={(e) => set((s) => ({ ...s, voice: { ...s.voice, checkInSeconds: Number(e.target.value) } }))}
+                className={rangeClass}
+              />
+            </Row>
+          )}
+          <Row
+            label="How Ari hears you"
+            description="Accurate mode understands accents and phone microphones much better; your words appear after you pause. It needs Groq set up, otherwise your browser's live captions are used."
+          >
+            <Choices
+              label="Speech recognition"
+              options={[
+                { v: "auto" as const, label: "Accurate (Groq Whisper)" },
+                { v: "browser" as const, label: "Live captions (browser)" },
+              ]}
+              isSelected={(v) => (v === "browser" ? settings.voice.recognition === "browser" : settings.voice.recognition !== "browser")}
+              onSelect={(v) => set((s) => ({ ...s, voice: { ...s.voice, recognition: v } }))}
             />
-            {settings.voice.checkIns && (
-              <div className="py-3">
-                <label htmlFor="voice-check-in-seconds" className="flex items-center justify-between text-[0.95rem] font-medium">
-                  Wait before checking in <span className="text-sm font-normal text-muted tabular-nums">{settings.voice.checkInSeconds}s</span>
-                </label>
-                <input
-                  id="voice-check-in-seconds"
-                  type="range"
-                  min={5}
-                  max={20}
-                  step={1}
-                  value={settings.voice.checkInSeconds}
-                  onChange={(e) => set((s) => ({ ...s, voice: { ...s.voice, checkInSeconds: Number(e.target.value) } }))}
-                  className="mt-3 w-full cursor-pointer accent-[var(--primary)]"
-                />
-              </div>
-            )}
-            <div className="py-3">
-              <p className="text-[0.95rem] font-medium">Speech recognition</p>
-              <div className="mt-2 flex flex-wrap gap-2">
-                {[
-                  { v: "auto" as const, label: "Accurate (Groq Whisper)" },
-                  { v: "browser" as const, label: "Live captions (browser)" },
-                ].map((o) => {
-                  const selected = o.v === "browser" ? settings.voice.recognition === "browser" : settings.voice.recognition !== "browser";
-                  return (
-                    <button
-                      key={o.v}
-                      type="button"
-                      aria-pressed={selected}
-                      onClick={() => set((s) => ({ ...s, voice: { ...s.voice, recognition: o.v } }))}
-                      className={cn(
-                        "h-10 cursor-pointer rounded-full border px-4 text-sm font-medium transition-colors",
-                        selected ? "border-primary bg-primary-soft" : "border-border hover:bg-surface-2",
-                      )}
-                    >
-                      {o.label}
-                    </button>
-                  );
-                })}
-              </div>
-              <p className="mt-2 text-xs text-subtle">
-                Whisper understands accents and phone microphones much better; your words appear after you pause. It needs smart replies on — otherwise the browser&apos;s recogniser is used.
-              </p>
-            </div>
-            <div className="py-3">
-              <p className="text-[0.95rem] font-medium">Voice engine</p>
-              <div className="mt-2 flex flex-wrap gap-2">
-                {[
-                  { v: "browser" as const, label: "Device voice", disabled: false },
-                  { v: "groq" as const, label: "Groq Orpheus (preview)", disabled: !config?.tts },
-                ].map((o) => (
-                  <button
-                    key={o.v}
-                    type="button"
-                    disabled={o.disabled}
-                    aria-pressed={settings.voice.engine === o.v}
-                    onClick={() => set((s) => ({ ...s, voice: { ...s.voice, engine: o.v } }))}
-                    className={cn(
-                      "h-10 cursor-pointer rounded-full border px-4 text-sm font-medium transition-colors disabled:cursor-not-allowed disabled:opacity-45",
-                      settings.voice.engine === o.v ? "border-primary bg-primary-soft" : "border-border hover:bg-surface-2",
-                    )}
-                  >
-                    {o.label}
-                  </button>
-                ))}
-              </div>
-              {!config?.tts && <p className="mt-2 text-xs text-subtle">Server voices need GROQ_TTS_MODEL set on the server (e.g. canopylabs/orpheus-v1-english).</p>}
-            </div>
-            <div className="py-3">
-              <label htmlFor="voice-name" className="text-[0.95rem] font-medium">
-                Device voice
-              </label>
+          </Row>
+          {/* Server voices are only offered when the server has a TTS model configured. */}
+          {config?.tts && (
+            <Row label="Ari's voice">
+              <Choices
+                label="Voice engine"
+                options={[
+                  { v: "browser" as const, label: "Device voice" },
+                  { v: "groq" as const, label: "Groq Orpheus (preview)" },
+                ]}
+                isSelected={(v) => settings.voice.engine === v}
+                onSelect={(v) => set((s) => ({ ...s, voice: { ...s.voice, engine: v } }))}
+              />
+            </Row>
+          )}
+          <Row
+            label="Device voice"
+            htmlFor="voice-name"
+            description={voices.length === 0 && listVoices().length === 0 ? "No voices reported by this browser yet." : undefined}
+          >
+            <div className="relative">
               <select
                 id="voice-name"
                 value={settings.voice.voiceName ?? ""}
                 onChange={(e) => set((s) => ({ ...s, voice: { ...s.voice, voiceName: e.target.value || undefined } }))}
-                className="mt-2 h-11 w-full cursor-pointer rounded-xl border border-border bg-surface px-3 text-base"
+                className="h-12 w-full cursor-pointer appearance-none rounded-2xl border border-border-strong bg-surface pl-4 pr-11 text-base text-fg outline-none focus-visible:border-primary focus-visible:ring-2 focus-visible:ring-ring"
               >
                 <option value="">Automatic{autoVoice ? ` (${autoVoice.name})` : ""}</option>
                 {voiceOptions.map((v) => (
@@ -262,96 +280,200 @@ function SettingsInner() {
                   </option>
                 ))}
               </select>
-              {voices.length === 0 && listVoices().length === 0 && <p className="mt-2 text-xs text-subtle">No voices reported by this browser yet.</p>}
+              <ChevronDown className="pointer-events-none absolute right-4 top-1/2 h-5 w-5 -translate-y-1/2 text-muted" aria-hidden="true" />
             </div>
-            <div className="py-3">
-              <label htmlFor="voice-rate" className="flex items-center justify-between text-[0.95rem] font-medium">
-                Speaking pace <span className="text-sm font-normal text-muted tabular-nums">{settings.voice.rate.toFixed(2)}×</span>
-              </label>
-              <input
-                id="voice-rate"
-                type="range"
-                min={0.8}
-                max={1.3}
-                step={0.05}
-                value={settings.voice.rate}
-                onChange={(e) => set((s) => ({ ...s, voice: { ...s.voice, rate: Number(e.target.value) } }))}
-                className="mt-3 w-full cursor-pointer accent-[var(--primary)]"
-              />
+          </Row>
+          <Row label="Speaking speed" htmlFor="voice-rate" value={`${settings.voice.rate.toFixed(2)}×`}>
+            <input
+              id="voice-rate"
+              type="range"
+              min={0.8}
+              max={1.3}
+              step={0.05}
+              value={settings.voice.rate}
+              onChange={(e) => set((s) => ({ ...s, voice: { ...s.voice, rate: Number(e.target.value) } }))}
+              className={rangeClass}
+            />
+            <div className="flex justify-between text-sm text-muted" aria-hidden="true">
+              <span>Slower</span>
+              <span>Faster</span>
             </div>
+          </Row>
+          <div className="py-4">
+            <Button variant="secondary" onClick={testVoice} fullWidth className="sm:w-auto">
+              <Play className="h-4.5 w-4.5" aria-hidden="true" /> Test voice
+            </Button>
           </div>
-          <button type="button" onClick={testVoice} className="mt-3 inline-flex h-10 cursor-pointer items-center gap-2 rounded-full border border-border px-4 text-sm font-medium hover:bg-surface-2">
-            <Play className="h-4 w-4" /> Test voice
-          </button>
-        </Section>
+        </Group>
+
+        {/* Privacy */}
+        <Group
+          id="privacy"
+          title="Privacy"
+          footer={
+            <>
+              <p>
+                Conversations are stored only in this browser. To write each reply, your last {LIMITS.contextWindow} messages (and, in voice, your recording) are sent to Groq after emails, phone numbers, addresses and similar details are removed. Nothing is stored on a server.
+              </p>
+              <p className="mt-2">Messages that suggest someone may be in immediate danger are never sent to Groq. {APP.companion} responds with crisis resources directly.</p>
+            </>
+          }
+        >
+          <Switch
+            id="consent-context"
+            label="Remember personal details"
+            description={`Lets ${APP.companion} include a short summary of things you've shared (like your first name, who you live with, or hobbies) so replies stay personal in long conversations. Off by default.`}
+            checked={settings.consent.context}
+            disabled={!groq}
+            onChange={(v) => set((s) => ({ ...s, consent: { ...s.consent, context: v, decidedAt: now() } }))}
+          />
+          <Switch
+            id="consent-voice"
+            label="Use my microphone"
+            description="Your speech is turned into text by your browser, or by Groq Whisper when that's more accurate. Audio is never saved."
+            checked={settings.consent.voice}
+            onChange={(v) => set((s) => ({ ...s, consent: { ...s.consent, voice: v, decidedAt: now() } }))}
+          />
+        </Group>
 
         {/* Appearance */}
-        <Section title="Appearance">
-          <div className="flex rounded-full border border-border bg-surface-2 p-1" role="group" aria-label="Theme">
-            {[
-              { v: "system" as const, label: "System", icon: Monitor },
-              { v: "light" as const, label: "Light", icon: Sun },
-              { v: "dark" as const, label: "Dark", icon: Moon },
-            ].map(({ v, label, icon: Icon }) => (
-              <button
-                key={v}
-                type="button"
-                aria-pressed={settings.theme === v}
-                onClick={() => set((s) => ({ ...s, theme: v }))}
-                className={cn("inline-flex h-10 flex-1 cursor-pointer items-center justify-center gap-2 rounded-full text-sm font-medium transition-all", settings.theme === v ? "bg-surface shadow-soft" : "text-muted hover:text-fg")}
-              >
-                <Icon className="h-4 w-4" /> {label}
-              </button>
-            ))}
+        <Group id="appearance" title="Appearance">
+          <div className="py-4">
+            <div className="flex rounded-full bg-surface-2 p-1" role="group" aria-label="Theme">
+              {[
+                { v: "light" as const, label: "Light", icon: Sun },
+                { v: "dark" as const, label: "Dark", icon: Moon },
+                { v: "system" as const, label: "Auto", icon: Monitor },
+              ].map(({ v, label, icon: Icon }) => (
+                <button
+                  key={v}
+                  type="button"
+                  aria-pressed={settings.theme === v}
+                  onClick={() => set((s) => ({ ...s, theme: v }))}
+                  className={cn(
+                    "inline-flex h-12 flex-1 cursor-pointer items-center justify-center gap-2 rounded-full text-[0.9375rem] font-semibold transition-colors duration-200",
+                    settings.theme === v ? "bg-surface text-fg shadow-soft" : "text-muted hover:text-fg",
+                  )}
+                >
+                  <Icon className="h-4.5 w-4.5" aria-hidden="true" /> {label}
+                </button>
+              ))}
+            </div>
+            <p className="mt-2 text-sm text-muted">Auto matches your device&apos;s light or dark setting.</p>
           </div>
-        </Section>
+        </Group>
 
         {/* Data */}
-        <Section id="data" title="Your data" description={`${conversations.length} conversations and ${moods.length} mood check-ins are stored in this browser.`}>
-          <div className="flex flex-wrap gap-2">
-            {hasSamples ? (
-              <button type="button" onClick={() => { removeSampleData(); toast("Sample data removed"); }} className="h-10 cursor-pointer rounded-full border border-border px-4 text-sm font-medium hover:bg-surface-2">
-                Remove sample data
-              </button>
-            ) : (
-              <button type="button" onClick={() => { loadSampleData(); toast("Fictional sample data loaded"); }} className="h-10 cursor-pointer rounded-full border border-border px-4 text-sm font-medium hover:bg-surface-2">
-                Load fictional sample data
-              </button>
-            )}
-            <button type="button" onClick={exportData} className="inline-flex h-10 cursor-pointer items-center gap-2 rounded-full border border-border px-4 text-sm font-medium hover:bg-surface-2">
-              <Download className="h-4 w-4" /> Export as JSON
-            </button>
-          </div>
-          <div className="mt-5 flex flex-wrap gap-2 border-t border-border pt-5">
-            <button type="button" onClick={() => setConfirm("conversations")} disabled={!conversations.length} className="inline-flex h-10 cursor-pointer items-center gap-2 rounded-full bg-danger-soft px-4 text-sm font-medium text-danger disabled:opacity-40">
-              <Trash2 className="h-4 w-4" /> Clear conversations
-            </button>
-            <button type="button" onClick={() => setConfirm("moods")} disabled={!moods.length} className="inline-flex h-10 cursor-pointer items-center gap-2 rounded-full bg-danger-soft px-4 text-sm font-medium text-danger disabled:opacity-40">
-              <Trash2 className="h-4 w-4" /> Clear mood log
-            </button>
-            <button type="button" onClick={() => setConfirm("everything")} className="inline-flex h-10 cursor-pointer items-center gap-2 rounded-full bg-danger px-4 text-sm font-medium text-white dark:text-bg">
-              <RotateCcw className="h-4 w-4" /> Reset everything
-            </button>
-          </div>
-        </Section>
+        <Group
+          id="data"
+          title="Your data"
+          footer={`${conversations.length} ${conversations.length === 1 ? "conversation" : "conversations"} and ${moods.length} mood ${moods.length === 1 ? "check-in" : "check-ins"} are stored in this browser.`}
+        >
+          {hasSamples ? (
+            <ActionRow
+              icon={Database}
+              label="Remove sample data"
+              onClick={() => {
+                removeSampleData();
+                toast("Sample data removed");
+              }}
+            />
+          ) : (
+            <ActionRow
+              icon={Database}
+              label="Load fictional sample data"
+              onClick={() => {
+                loadSampleData();
+                toast("Fictional sample data loaded");
+              }}
+            />
+          )}
+          <ActionRow icon={Download} label="Export as JSON" onClick={exportData} />
+          <ActionRow icon={Trash2} label="Clear conversations" tone="danger" onClick={() => setConfirm("conversations")} disabled={!conversations.length} />
+          <ActionRow icon={Trash2} label="Clear mood log" tone="danger" onClick={() => setConfirm("moods")} disabled={!moods.length} />
+          <ActionRow icon={RotateCcw} label="Reset everything" tone="danger" onClick={() => setConfirm("everything")} />
+        </Group>
 
         {/* About */}
-        <Section title="About this demo">
-          <ul className="grid gap-3 text-sm sm:grid-cols-2">
-            <li className="flex items-center gap-2.5">
-              <UserRound className="h-4 w-4 text-primary" /> Guest mode — no account {FEATURES.accounts ? "" : "required"}
-            </li>
-            <li className="flex items-center gap-2.5">
-              <CreditCard className="h-4 w-4 text-primary" /> Payments, subscriptions & billing {FEATURES.payments ? "on" : "disabled"}
-            </li>
-          </ul>
-          <p className="mt-4 text-sm leading-relaxed text-muted">{DISCLAIMER} Sample data is fictional.</p>
-          <p className="mt-2 text-xs text-subtle">
-            {APP.name} {APP.version}
-          </p>
-        </Section>
-      </div>
+        <Group id="about" title="About" footer={`${APP.name} ${APP.version}`}>
+          <div className="py-4">
+            <p className="text-base leading-relaxed text-fg">{DISCLAIMER} Sample data is fictional.</p>
+            <ul className="mt-3 space-y-2 text-[0.9375rem] text-muted">
+              <li className="flex items-center gap-2.5">
+                <UserRound className="h-4.5 w-4.5 text-primary" aria-hidden="true" /> Guest mode, no account {FEATURES.accounts ? "" : "required"}
+              </li>
+              <li className="flex items-center gap-2.5">
+                <CreditCard className="h-4.5 w-4.5 text-primary" aria-hidden="true" /> Payments, subscriptions & billing {FEATURES.payments ? "on" : "disabled"}
+              </li>
+            </ul>
+          </div>
 
+          <div className="py-4">
+            <div className="flex items-start gap-3">
+              <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-primary-soft text-primary">
+                <Sparkles className="h-5 w-5" aria-hidden="true" />
+              </span>
+              <div className="min-w-0 flex-1">
+                <p className="text-base font-medium text-fg">Replies</p>
+                <p className="text-[0.9375rem] text-muted">
+                  {APP.companion}&apos;s replies are written by Groq. Now answering: {remote ? "Groq" : "Backup replies (Groq not set up)"}
+                </p>
+              </div>
+            </div>
+            {config?.misconfigured && (
+              <p className="mt-3 rounded-2xl bg-warm-soft p-3 text-sm text-fg">AI_PROVIDER is set to “groq” but no GROQ_API_KEY was found, so the server is using demo mode.</p>
+            )}
+
+            <details className="group mt-3">
+              <summary className="flex min-h-12 cursor-pointer list-none items-center gap-2 rounded-xl text-[0.9375rem] font-semibold text-primary [&::-webkit-details-marker]:hidden">
+                <ChevronDown className="h-4.5 w-4.5 transition-transform duration-200 group-open:rotate-180" aria-hidden="true" /> Technical details
+              </summary>
+              <dl className="mt-2 grid grid-cols-2 gap-3 rounded-2xl bg-surface-2 p-4 text-[0.9375rem]">
+                <div>
+                  <dt className="text-sm text-muted">Server provider</dt>
+                  <dd className="mt-0.5 font-medium">{loading ? "…" : config?.provider === "groq" ? "Groq" : "Demo"}</dd>
+                </div>
+                <div className="min-w-0">
+                  <dt className="text-sm text-muted">Chat model</dt>
+                  <dd className="mt-0.5 truncate font-medium" title={config?.model}>
+                    {loading ? "…" : (config?.model ?? "—")}
+                  </dd>
+                </div>
+                <div>
+                  <dt className="text-sm text-muted">API key</dt>
+                  <dd className="mt-0.5 font-medium">{loading ? "…" : groq ? "Set (server only)" : "Not set"}</dd>
+                </div>
+                <div>
+                  <dt className="text-sm text-muted">Now answering</dt>
+                  <dd className="mt-0.5 font-medium">{remote ? "Groq" : "Backup replies"}</dd>
+                </div>
+              </dl>
+              <p className="mt-3 text-sm leading-relaxed text-muted">
+                If Groq is busy or unreachable mid-conversation, Ari answers with a short backup reply so the conversation isn&apos;t interrupted.
+              </p>
+            </details>
+
+            <div className="mt-3 flex flex-col gap-3 sm:flex-row sm:items-center">
+              <Button variant="secondary" onClick={() => void testConnection()} disabled={check.state === "checking"}>
+                {check.state === "checking" ? <Loader2 className="h-4.5 w-4.5 animate-spin" aria-hidden="true" /> : <RotateCcw className="h-4.5 w-4.5" aria-hidden="true" />}
+                Test connection
+              </Button>
+              <div aria-live="polite" className="min-w-0">
+                {check.state === "ok" && (
+                  <span className="inline-flex items-start gap-1.5 text-[0.9375rem] text-success">
+                    <CheckCircle2 className="mt-0.5 h-4.5 w-4.5 shrink-0" aria-hidden="true" /> {check.message}
+                  </span>
+                )}
+                {check.state === "fail" && (
+                  <span className="inline-flex items-start gap-1.5 text-[0.9375rem] text-danger">
+                    <CircleAlert className="mt-0.5 h-4.5 w-4.5 shrink-0" aria-hidden="true" /> {check.message}
+                  </span>
+                )}
+              </div>
+            </div>
+          </div>
+        </Group>
+      </div>
 
       <ConfirmDialog
         open={confirm === "conversations"}

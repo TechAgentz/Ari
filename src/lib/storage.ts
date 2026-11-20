@@ -88,7 +88,7 @@ function createStore<T>(key: string, fallback: T, migrate: (raw: unknown) => T =
 
 export const DEFAULT_SETTINGS: Settings = {
   onboarded: false,
-  theme: "system",
+  theme: "light",
   aiMode: "auto",
   consent: { ai: false, voice: false, context: false },
   voice: { output: true, engine: "browser", recognition: "auto", rate: 1, checkIns: true, checkInSeconds: 8 },

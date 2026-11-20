@@ -1,18 +1,15 @@
 "use client";
 
-import { AudioLines, Plus, ShieldCheck, Trash2 } from "lucide-react";
+import { AudioLines, Lock, SquarePen, Trash2 } from "lucide-react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { CrisisCard } from "@/components/crisis-card";
-import { ProviderBadge } from "@/components/provider-badge";
-import { StageJourney } from "@/components/stage-journey";
-import { Button } from "@/components/ui/button";
+import { Button, ButtonLink } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/ui/dialog";
 import { streamReply, usesRemoteAI } from "@/lib/agent/client";
 import { openingMessage } from "@/lib/agent/demo-engine";
 import { inferTopic } from "@/lib/agent/extract";
-import { analyzeConversation } from "@/lib/agent/state";
 import { getEntry, type KnowledgeEntry } from "@/lib/knowledge/base";
 import { assessRisk } from "@/lib/safety/crisis";
 import { APP, LIMITS } from "@/lib/config";
@@ -31,7 +28,7 @@ import type { ChatMessage, Conversation, MessageMeta, TopicId } from "@/lib/type
 import { useServerConfig } from "@/lib/use-server-config";
 import { now, titleFromMessage, uid } from "@/lib/utils";
 import { Composer } from "./composer";
-import { MessageBubble, TypingIndicator } from "./message-bubble";
+import { CompanionAvatar, MessageBubble, TypingIndicator } from "./message-bubble";
 
 export function ChatScreen() {
   const params = useSearchParams();
@@ -114,6 +111,12 @@ export function interruptedMeta(meta: MessageMeta, shown: string): MessageMeta {
 
 const PERSONAL_TOPICS: TopicId[] = ["name", "household", "household_size", "together", "support_network"];
 
+/** "virtual care assistant" -> "Virtual care assistant" */
+const ROLE_LABEL = APP.role.charAt(0).toUpperCase() + APP.role.slice(1);
+
+const iconBtn =
+  "flex h-12 w-12 shrink-0 cursor-pointer items-center justify-center rounded-full text-muted transition-colors hover:bg-surface-2 hover:text-fg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring";
+
 function ChatSession({
   id,
   prompt,
@@ -146,7 +149,6 @@ function ChatSession({
 
   const busy = streaming !== null;
   const messages = conv.messages;
-  const analysis = useMemo(() => analyzeConversation(messages), [messages]);
   const showCrisis = messages.some((m) => m.meta?.safety === "crisis" || m.meta?.safety === "distress") || streaming?.meta?.safety === "crisis";
   const remote = usesRemoteAI(settings, config);
   // Deleted from this browser (another tab, or just now here): show that instead of writing it back.
@@ -237,60 +239,58 @@ function ChatSession({
 
   const lastAssistant = [...messages].reverse().find((m) => m.role === "assistant");
   const lastTopic = lastAssistant ? lastAssistant.meta?.topic ?? inferTopic(lastAssistant.content) : undefined;
-  const support = analysis.stage === "support";
   const afterSafety = lastAssistant?.meta?.safety === "crisis" || lastAssistant?.meta?.safety === "distress";
+  const started = messages.some((m) => m.role === "user");
+  const offered = lastAssistant?.meta?.techniqueOffered;
+  // Starter suggestions only before the first message; after that, only direct quick replies
+  // to what Ari just asked or offered.
   const chips = afterSafety ? [] : [
     lastTopic && PERSONAL_TOPICS.includes(lastTopic) ? "I'd rather not say" : null,
-    lastAssistant?.meta?.techniqueOffered ? ACCEPT_OFFER : null,
-    lastAssistant?.meta?.techniqueOffered ? "Maybe later" : null,
+    offered ? ACCEPT_OFFER : null,
+    offered ? "Maybe later" : null,
     lastAssistant?.meta?.techniqueGiven ? "I'll give it a try" : null,
-    !support ? "Can we talk about something on my mind?" : null,
-    !support ? "I've been feeling stressed lately" : null,
-    support && !lastAssistant?.meta?.techniqueGiven ? "Could you suggest a quick calming exercise?" : null,
-    support ? "I'd just like to vent for a bit" : null,
+    !started ? "Can we talk about something on my mind?" : null,
+    !started ? "I've been feeling stressed lately" : null,
+    !started ? "Could you suggest a quick calming exercise?" : null,
   ]
     .filter((c): c is string => Boolean(c))
     .slice(0, 3);
 
   return (
     <div className="flex h-app flex-col lg:h-dvh">
-      <header className="flex items-center justify-between gap-3 border-b border-border bg-bg/70 px-4 py-3 backdrop-blur-xl sm:px-6">
-        <div className="min-w-0">
-          <h1 className="truncate font-serif text-lg font-semibold sm:text-xl">{persisted ? conv.title : `Talk with ${APP.companion}`}</h1>
-          <StageJourney stage={analysis.stage} className="mt-1" />
-        </div>
-        <div className="flex shrink-0 items-center gap-1.5">
-          <span className="hidden sm:inline-flex">
-            <ProviderBadge />
-          </span>
-          <Link
-            href="/voice"
-            aria-label="Switch to voice conversation"
-            title="Voice conversation"
-            className="flex h-10 w-10 items-center justify-center rounded-full text-muted hover:bg-surface-2 hover:text-fg"
-          >
-            <AudioLines className="h-5 w-5" />
-          </Link>
-          <button
-            type="button"
-            onClick={() => router.push(`/chat?new=${now()}`)}
-            aria-label="New conversation"
-            title="New conversation"
-            className="flex h-10 w-10 cursor-pointer items-center justify-center rounded-full text-muted hover:bg-surface-2 hover:text-fg"
-          >
-            <Plus className="h-5 w-5" />
-          </button>
-          {persisted && !gone && (
-            <button
-              type="button"
-              onClick={() => setConfirmDelete(true)}
-              aria-label="Delete this conversation"
-              title="Delete conversation"
-              className="flex h-10 w-10 cursor-pointer items-center justify-center rounded-full text-muted hover:bg-danger-soft hover:text-danger"
-            >
-              <Trash2 className="h-5 w-5" />
+      <header className="border-b border-border bg-bg/85 backdrop-blur-xl">
+        <div className="mx-auto flex max-w-3xl items-center gap-3 px-5 py-2.5 sm:px-6">
+          <CompanionAvatar />
+          <div className="min-w-0 flex-1">
+            <h1 className="truncate text-lg font-semibold leading-tight text-fg">
+              {APP.companion}
+              {persisted && <span className="sr-only">: {conv.title}</span>}
+            </h1>
+            <p className="truncate text-sm text-muted">{ROLE_LABEL}</p>
+          </div>
+          <div className="flex shrink-0 items-center gap-1">
+            <ButtonLink href="/voice" variant="soft" size="sm" className="px-3.5 sm:px-4" aria-label="Talk by voice">
+              <AudioLines className="h-5 w-5" aria-hidden />
+              <span className="hidden min-[400px]:inline">
+                <span className="sm:hidden">Voice</span>
+                <span className="hidden sm:inline">Talk by voice</span>
+              </span>
+            </ButtonLink>
+            <button type="button" onClick={() => router.push(`/chat?new=${now()}`)} aria-label="New chat" title="New chat" className={iconBtn}>
+              <SquarePen className="h-5 w-5" />
             </button>
-          )}
+            {persisted && !gone && (
+              <button
+                type="button"
+                onClick={() => setConfirmDelete(true)}
+                aria-label="Delete this conversation"
+                title="Delete conversation"
+                className={`${iconBtn} hover:!bg-danger-soft hover:!text-danger`}
+              >
+                <Trash2 className="h-5 w-5" />
+              </button>
+            )}
+          </div>
         </div>
       </header>
 
@@ -302,41 +302,41 @@ function ChatSession({
         }}
         className="scrollbar-thin flex-1 overflow-y-auto"
       >
-        <div className="mx-auto flex max-w-3xl flex-col gap-5 px-4 py-6 sm:px-6" aria-live="polite" aria-relevant="additions">
-          <p className="mx-auto flex max-w-md items-center gap-2 rounded-full bg-surface-2 px-4 py-2 text-center text-xs text-muted">
-            <ShieldCheck className="h-4 w-4 shrink-0 text-primary" />
+        <div className="mx-auto flex max-w-3xl flex-col gap-6 px-5 py-5 sm:px-6 sm:py-8" aria-live="polite" aria-relevant="additions">
+          <p className="flex items-center justify-center gap-1.5 text-center text-sm text-muted">
+            <Lock className="h-3.5 w-3.5 shrink-0" aria-hidden />
             {remote ? "Saved only in this browser. Contact details are removed before messages reach Groq." : "Saved only in this browser."}
           </p>
           {messages.map((m) => (
             <div key={m.id}>
               <MessageBubble message={m} />
-              {m.meta?.safety === "crisis" && <CrisisCard className="ml-12 mt-3" categories={m.meta.safetyCategories} />}
+              {m.meta?.safety === "crisis" && <CrisisCard className="mt-3 sm:ml-12" categories={m.meta.safetyCategories} />}
             </div>
           ))}
           {streaming && (streaming.text ? <MessageBubble message={{ role: "assistant", content: streaming.text, meta: streaming.meta ?? undefined }} streaming /> : <TypingIndicator />)}
-          {showCrisis && !messages.some((m) => m.meta?.safety === "crisis") && <CrisisCard compact className="ml-12" />}
+          {showCrisis && !messages.some((m) => m.meta?.safety === "crisis") && <CrisisCard compact className="sm:ml-12" />}
         </div>
       </div>
 
-      <div className="border-t border-border bg-bg/80 px-4 pb-3 pt-3 backdrop-blur-xl sm:px-6">
+      <div className="border-t border-border bg-bg/90 px-5 pb-2 pt-3 backdrop-blur-xl sm:px-6">
         <div className="mx-auto max-w-3xl">
           {gone ? (
             <div role="status" className="flex flex-col items-center gap-3 rounded-3xl border border-border bg-surface p-4 text-center shadow-soft sm:flex-row sm:justify-between sm:text-left">
-              <p className="text-sm text-muted">This conversation was deleted from this browser.</p>
-              <Button size="sm" onClick={() => router.push(`/chat?new=${now()}`)}>
-                <Plus className="h-4 w-4" /> Start a new conversation
+              <p className="text-base text-muted">This conversation was deleted from this browser.</p>
+              <Button onClick={() => router.push(`/chat?new=${now()}`)}>
+                <SquarePen className="h-5 w-5" /> Start a new chat
               </Button>
             </div>
           ) : (
             <>
               {!busy && !input && !loading && chips.length > 0 && (
-                <div className="mb-2.5 flex gap-2 overflow-x-auto pb-1 scrollbar-thin" aria-label="Suggested replies">
+                <div className="mb-3 flex flex-wrap gap-2" role="group" aria-label={started ? "Quick replies" : "Ideas to get started"}>
                   {chips.map((c) => (
                     <button
                       key={c}
                       type="button"
                       onClick={() => void send(c)}
-                      className="h-9 shrink-0 cursor-pointer rounded-full border border-border bg-surface px-3.5 text-sm text-muted transition-colors hover:border-primary/40 hover:bg-primary-soft hover:text-fg"
+                      className="min-h-12 cursor-pointer rounded-full border border-border-strong bg-surface px-4 py-2 text-left text-[0.9375rem] font-medium text-fg shadow-soft transition-colors hover:border-primary hover:bg-primary-soft focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                     >
                       {c}
                     </button>
@@ -346,9 +346,9 @@ function ChatSession({
               <Composer value={input} onChange={setInput} onSend={(t, via) => void send(t, via)} onStop={stop} busy={busy} disabled={loading} />
             </>
           )}
-          <p className="mt-2 text-center text-xs text-subtle">
-            {APP.companion} is a {APP.role}, not a psychologist, and can&apos;t diagnose.{" "}
-            <Link href="/support" className="font-medium text-danger underline-offset-4 hover:underline">
+          <p className="mt-1 text-center text-sm text-muted">
+            {APP.companion} is <span className="hidden sm:inline">a {APP.role}, </span>not a psychologist.{" "}
+            <Link href="/support" className="inline-block py-2 font-semibold text-danger underline underline-offset-4 hover:no-underline">
               In crisis? Get help now
             </Link>
           </p>

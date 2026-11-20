@@ -1,30 +1,49 @@
 "use client";
 
-import { ArrowRight, AudioLines, BookOpen, History, Info, MessageCircle, Settings, ShieldCheck, SmilePlus, Sparkles, X } from "lucide-react";
+import {
+  ArrowRight,
+  AudioLines,
+  BookOpen,
+  Clock,
+  History,
+  Info,
+  LifeBuoy,
+  MessageCircle,
+  Mic,
+  ShieldCheck,
+  SmilePlus,
+  Sparkles,
+  X,
+  type LucideIcon,
+} from "lucide-react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { useMemo, useState } from "react";
-import { usesRemoteAI } from "@/lib/agent/client";
 import { analyzeConversation } from "@/lib/agent/state";
 import { APP, DISCLAIMER } from "@/lib/config";
 import { KNOWLEDGE_BASE } from "@/lib/knowledge/base";
-import { conversationsStore, moodStore, settingsStore, useHydrated } from "@/lib/storage";
-import { useServerConfig } from "@/lib/use-server-config";
+import { conversationsStore, useHydrated } from "@/lib/storage";
 import { cn, conversationSummary, formatRelative, greetingForHour, localDateKey } from "@/lib/utils";
-import { MoodChart } from "./mood/mood-chart";
 import { MOODS } from "./mood/mood-meta";
-import { Card } from "./ui/primitives";
+import { ButtonLink } from "./ui/button";
+import { Card, SectionTitle } from "./ui/primitives";
 
 const TECHNIQUES = KNOWLEDGE_BASE.filter((e) => e.technique);
+
+const EXPLORE: { href: string; icon: LucideIcon; title: string; body: string; tone: string }[] = [
+  { href: "/voice", icon: AudioLines, title: "Talk", body: "Speak with Ari out loud.", tone: "bg-primary-soft text-primary" },
+  { href: "/chat?new=start", icon: MessageCircle, title: "Chat", body: "Type at your own pace.", tone: "bg-accent-soft text-accent" },
+  { href: "/library", icon: BookOpen, title: "Exercises", body: "Calming tools and guides.", tone: "bg-success-soft text-success" },
+  { href: "/mood", icon: SmilePlus, title: "Mood check-in", body: "Notice how you're doing.", tone: "bg-warm-soft text-warm" },
+  { href: "/history", icon: History, title: "Past conversations", body: "Pick up where you left off.", tone: "bg-surface-3 text-fg" },
+  { href: "/support", icon: LifeBuoy, title: "Crisis support", body: "Get help right now.", tone: "bg-danger-soft text-danger" },
+];
 
 export function Dashboard() {
   const hydrated = useHydrated();
   const params = useSearchParams();
   const [noticeHidden, setNoticeHidden] = useState(false);
   const conversations = conversationsStore.useValue();
-  const moods = moodStore.useValue();
-  const settings = settingsStore.useValue();
-  const { config } = useServerConfig();
 
   const name = useMemo(() => {
     for (const c of conversations) {
@@ -35,193 +54,164 @@ export function Dashboard() {
   }, [conversations]);
 
   const todayKey = localDateKey();
-  const checkedInToday = moods.some((m) => m.date === todayKey);
   const dayIndex = Math.floor(new Date(`${todayKey}T00:00:00`).getTime() / 86_400_000);
   const practice = TECHNIQUES[dayIndex % TECHNIQUES.length];
-  const remote = usesRemoteAI(settings, config);
   const greeting = hydrated ? greetingForHour() : "Welcome";
+  const last = hydrated ? conversations[0] : undefined;
+  const lastSummary = last ? conversationSummary(last) : undefined;
 
   return (
-    <div className="mx-auto max-w-6xl px-4 pb-16 pt-8 sm:px-6 lg:px-10 lg:pt-12">
+    <div className="mx-auto max-w-3xl px-5 pb-16 pt-6 sm:px-6 lg:max-w-4xl lg:px-10 lg:pt-12">
       {params.get("notice") === "demo" && !noticeHidden && (
-        <div role="status" className="mb-6 flex animate-fade-up items-start gap-3 rounded-2xl border border-border bg-surface p-4 shadow-soft">
-          <Info className="mt-0.5 h-5 w-5 shrink-0 text-primary" />
-          <p className="flex-1 text-sm leading-relaxed">
-            <strong className="font-semibold">Accounts, subscriptions and payments are turned off in this demo.</strong> You&apos;re using {APP.name} as a guest — everything is free and stays in this browser.
+        <div role="status" className="mb-6 flex animate-fade-up items-start gap-3 rounded-3xl border border-border bg-surface p-4 shadow-soft">
+          <Info className="mt-1 h-5 w-5 shrink-0 text-primary" aria-hidden />
+          <p className="flex-1 text-base leading-relaxed">
+            <strong className="font-semibold">Accounts, subscriptions and payments are turned off in this demo.</strong> You&apos;re using {APP.name} as a
+            guest. Everything is free and stays in this browser.
           </p>
-          <button type="button" onClick={() => setNoticeHidden(true)} aria-label="Dismiss" className="-m-1 flex h-8 w-8 cursor-pointer items-center justify-center rounded-full text-muted hover:bg-surface-2">
-            <X className="h-4 w-4" />
+          <button
+            type="button"
+            onClick={() => setNoticeHidden(true)}
+            aria-label="Dismiss notice"
+            className="-m-2 flex h-12 w-12 shrink-0 cursor-pointer items-center justify-center rounded-full text-muted transition-colors hover:bg-surface-2 hover:text-fg"
+          >
+            <X className="h-5 w-5" aria-hidden />
           </button>
         </div>
       )}
 
-      {/* Hero */}
-      <section className="animate-fade-up">
-        <p className="text-sm font-medium text-primary">{hydrated && name ? `${greeting}, ${name}` : greeting}</p>
-        <h1 className="mt-2 max-w-2xl font-serif text-4xl font-semibold leading-[1.1] tracking-tight sm:text-5xl">How are you arriving today?</h1>
-        <p className="mt-4 max-w-xl text-lg leading-relaxed text-muted">
-          A calm space to talk things through with {APP.companion}, your {APP.role}. No sign-up, no judgement — just a conversation at your pace.
+      {/* 1. Greeting */}
+      <section className="animate-fade-up text-center" aria-labelledby="home-title">
+        <p className="text-base font-medium text-primary">{hydrated && name ? `${greeting}, ${name}` : greeting}</p>
+        <h1 id="home-title" className="mt-1 font-serif text-[1.75rem] font-semibold leading-tight tracking-tight text-fg lg:text-4xl">
+          How can I help today?
+        </h1>
+        <p className="mx-auto mt-2 max-w-md text-base leading-relaxed text-muted sm:text-[1.0625rem]">
+          I&apos;m {APP.companion}, your {APP.role}. I work alongside {APP.careTeam}.
         </p>
-        <div className="mt-6 flex flex-wrap gap-2" role="group" aria-label="Quick mood check-in">
+
+        {/* 2. Hero action */}
+        <div className="mt-8 flex flex-col items-center">
+          <Link href="/voice" className="group flex flex-col items-center rounded-3xl p-2 focus-visible:outline-offset-4">
+            <span className="relative flex h-[7.5rem] w-[7.5rem] items-center justify-center">
+              <span aria-hidden className="absolute -inset-3 rounded-full bg-primary-soft opacity-70" />
+              <span
+                aria-hidden
+                className="absolute inset-0 animate-breathe rounded-full bg-orb shadow-lift transition-transform duration-200 ease-out group-hover:scale-105 group-active:scale-95"
+              />
+              <Mic className="relative h-11 w-11 text-white drop-shadow-sm" strokeWidth={2} aria-hidden />
+            </span>
+            <span className="mt-6 text-lg font-semibold text-fg">Tap to talk</span>
+          </Link>
+          <Link
+            href="/chat?new=start"
+            className="mt-1 inline-flex min-h-12 items-center gap-1.5 rounded-full px-4 text-base font-medium text-primary underline-offset-4 hover:underline"
+          >
+            Prefer typing? Chat instead
+            <ArrowRight className="h-4 w-4" aria-hidden />
+          </Link>
+        </div>
+      </section>
+
+      {/* 3. Quick check-in */}
+      <section className="mt-10 animate-fade-up" aria-labelledby="home-feeling">
+        <SectionTitle id="home-feeling" title="How are you feeling?" />
+        <div className="grid grid-cols-5 gap-2 sm:gap-3" role="group" aria-labelledby="home-feeling">
           {MOODS.map(({ value, label, icon: Icon, color }) => (
             <Link
               key={value}
               href={`/mood?mood=${value}`}
-              className="group inline-flex h-11 items-center gap-2 rounded-full border border-border bg-surface/80 px-4 text-sm font-medium shadow-soft transition-all hover:-translate-y-0.5 hover:shadow-lift"
+              className="flex min-h-[5.5rem] flex-col items-center justify-center gap-1.5 rounded-3xl border border-border bg-surface px-1 py-3 shadow-soft transition-[box-shadow,transform,border-color] duration-200 ease-out hover:-translate-y-0.5 hover:border-border-strong hover:shadow-lift active:scale-[0.97]"
             >
-              <Icon className="h-5 w-5 transition-transform group-hover:scale-110" style={{ color }} />
-              {label}
+              <Icon className="h-8 w-8" style={{ color }} aria-hidden />
+              <span className="text-[0.9375rem] font-medium text-fg">{label}</span>
             </Link>
           ))}
         </div>
       </section>
 
-      {/* Primary actions */}
-      <section className="mt-10 grid gap-4 md:grid-cols-5" aria-label="Start a conversation">
-        <Link
-          href="/voice"
-          className="group relative overflow-hidden rounded-[2rem] bg-linear-to-br from-primary to-[color-mix(in_oklab,var(--primary)_55%,var(--accent))] p-7 text-primary-fg shadow-lift transition-transform duration-300 hover:-translate-y-1 md:col-span-3"
-        >
-          <span className="absolute -right-10 -top-10 h-44 w-44 rounded-full bg-white/10 blur-2xl transition-transform duration-500 group-hover:scale-125" />
-          <span className="flex items-center gap-2 text-sm font-semibold uppercase tracking-wide opacity-90">
-            <AudioLines className="h-5 w-5" /> Recommended
-          </span>
-          <h2 className="mt-5 font-serif text-3xl font-semibold">Start Voice Conversation</h2>
-          <p className="mt-2 max-w-md opacity-90">
-            Just talk. {APP.companion} listens, explains things in plain words, and gently asks a question if you go quiet — with a live transcript.
-          </p>
-          <span className="mt-6 inline-flex items-center gap-2 font-semibold">
-            Start talking <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
-          </span>
-        </Link>
-        <Link
-          href={`/chat?new=start`}
-          className="group relative overflow-hidden rounded-[2rem] border border-border bg-surface p-7 shadow-soft transition-transform duration-300 hover:-translate-y-1 hover:shadow-lift md:col-span-2"
-        >
-          <span className="absolute -right-8 -top-8 h-40 w-40 rounded-full bg-accent-soft blur-2xl transition-transform duration-500 group-hover:scale-125" />
-          <span className="relative flex h-12 w-12 items-center justify-center rounded-2xl bg-accent-soft text-accent">
-            <MessageCircle className="h-6 w-6" />
-          </span>
-          <h2 className="relative mt-5 font-serif text-2xl font-semibold">Talk with {APP.companion}</h2>
-          <p className="relative mt-2 max-w-sm text-muted">Prefer typing? Chat with {APP.companion} by text instead.</p>
-          <span className="relative mt-6 inline-flex items-center gap-2 font-semibold text-primary">
-            Open chat <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
-          </span>
-        </Link>
-      </section>
-
-      {/* Secondary tiles */}
-      <section className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-4" aria-label="Explore">
-        {[
-          { href: "/library", icon: BookOpen, title: "Knowledge Library", body: "Evidence-informed guides and techniques.", stat: `${KNOWLEDGE_BASE.length} articles`, tone: "bg-primary-soft text-primary" },
-          {
-            href: "/mood",
-            icon: SmilePlus,
-            title: "Daily Mood Check-in",
-            body: "A 30-second check-in to notice patterns.",
-            stat: hydrated ? (checkedInToday ? "Checked in today" : "Not yet today") : "—",
-            tone: "bg-warm-soft text-warm",
-          },
-          {
-            href: "/history",
-            icon: History,
-            title: "Conversation History",
-            body: "Review, continue or delete past chats.",
-            stat: hydrated ? `${conversations.length} saved` : "—",
-            tone: "bg-accent-soft text-accent",
-          },
-          {
-            href: "/settings",
-            icon: Settings,
-            title: "Settings",
-            body: "Privacy, consent, voice and data.",
-            stat: hydrated ? (remote ? "Smart replies on" : "Setup needed") : "—",
-            tone: "bg-surface-3 text-fg",
-          },
-        ].map(({ href, icon: Icon, title, body, stat, tone }, i) => (
-          <Link
-            key={href}
-            href={href}
-            style={{ animationDelay: `${80 + i * 50}ms` }}
-            className="group flex animate-fade-up flex-col rounded-3xl border border-border bg-surface/90 p-5 shadow-soft transition-all duration-300 hover:-translate-y-0.5 hover:shadow-lift"
-          >
-            <span className={cn("flex h-11 w-11 items-center justify-center rounded-2xl", tone)}>
-              <Icon className="h-5 w-5" />
-            </span>
-            <h3 className="mt-4 font-semibold">{title}</h3>
-            <p className="mt-1 text-sm leading-relaxed text-muted">{body}</p>
-            <span className="mt-4 text-xs font-medium text-subtle">{stat}</span>
-          </Link>
-        ))}
-      </section>
-
-      <section className="mt-10 grid gap-4 lg:grid-cols-3">
-        {/* Practice of the day */}
-        <Card className="p-6 lg:col-span-1">
-          <p className="flex items-center gap-2 text-sm font-medium text-accent">
-            <Sparkles className="h-4 w-4" /> Today&apos;s practice
-          </p>
-          <h3 className="mt-3 font-serif text-xl font-semibold">{practice.technique!.name}</h3>
-          <p className="mt-2 text-sm leading-relaxed text-muted">{practice.summary}</p>
-          <div className="mt-4 flex items-center justify-between">
-            <span className="text-xs text-subtle">{practice.technique!.duration}</span>
-            <Link href={`/library/${practice.slug}`} className="inline-flex items-center gap-1.5 text-sm font-semibold text-primary hover:underline">
-              Try it <ArrowRight className="h-4 w-4" />
-            </Link>
-          </div>
-        </Card>
-
-        {/* Mood trend */}
-        <Card className="p-6">
-          <div className="flex items-center justify-between">
-            <p className="text-sm font-medium text-warm">Your week</p>
-            <Link href="/mood" className="text-xs font-semibold text-primary hover:underline">
-              Check in
-            </Link>
-          </div>
-          {hydrated && moods.length ? (
-            <div className="mt-4">
-              <MoodChart entries={moods} days={7} />
+      {/* 4. Continue */}
+      {last && lastSummary && (
+        <section className="mt-8 animate-fade-up" aria-labelledby="home-continue">
+          <Card className="flex flex-col gap-4 p-5 sm:flex-row sm:items-center sm:p-6">
+            <span aria-hidden className="h-12 w-12 shrink-0 rounded-full bg-orb" />
+            <div className="min-w-0 flex-1">
+              <h2 id="home-continue" className="text-lg font-semibold text-fg">
+                Continue your last conversation
+              </h2>
+              <p className="mt-0.5 truncate text-base text-muted">{lastSummary.title}</p>
+              <p className="mt-0.5 flex items-center gap-1.5 text-[0.9375rem] text-muted">
+                {last.mode === "voice" ? <AudioLines className="h-4 w-4" aria-hidden /> : <MessageCircle className="h-4 w-4" aria-hidden />}
+                {last.mode === "voice" ? "Voice" : "Chat"} · {formatRelative(last.updatedAt)}
+              </p>
             </div>
-          ) : (
-            <p className="mt-4 text-sm leading-relaxed text-muted">No check-ins yet. Daily check-ins help you notice patterns in mood, sleep and energy.</p>
-          )}
-        </Card>
+            <ButtonLink href={`/chat?id=${last.id}`} size="lg" className="w-full sm:w-auto">
+              Continue
+              <ArrowRight className="h-5 w-5" aria-hidden />
+            </ButtonLink>
+          </Card>
+        </section>
+      )}
 
-        {/* Recent conversations */}
-        <Card className="p-6">
-          <div className="flex items-center justify-between">
-            <p className="text-sm font-medium text-primary">Recent conversations</p>
-            <Link href="/history" className="text-xs font-semibold text-primary hover:underline">
-              View all
-            </Link>
+      {/* 5. Try this now */}
+      <section className="mt-8 animate-fade-up" aria-labelledby="home-try">
+        <SectionTitle id="home-try" title="Try this now" />
+        <Card interactive className="relative p-5 sm:p-6">
+          <div className="flex items-start gap-4">
+            <span aria-hidden className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-accent-soft text-accent">
+              <Sparkles className="h-6 w-6" />
+            </span>
+            <div className="min-w-0 flex-1">
+              <p className="text-[0.9375rem] font-medium text-accent">Today&apos;s calming exercise</p>
+              <h3 className="mt-0.5 text-lg font-semibold text-fg">
+                <Link href={`/library/${practice.slug}`} className="after:absolute after:inset-0 after:rounded-3xl after:content-['']">
+                  {practice.technique!.name}
+                </Link>
+              </h3>
+              <p className="mt-1 text-base leading-relaxed text-muted">{practice.summary}</p>
+              <div className="mt-3 flex items-center justify-between gap-3">
+                <span className="inline-flex items-center gap-1.5 text-[0.9375rem] text-muted">
+                  <Clock className="h-4 w-4" aria-hidden />
+                  {practice.technique!.duration}
+                </span>
+                <span aria-hidden className="inline-flex items-center gap-1.5 text-base font-semibold text-primary">
+                  Start <ArrowRight className="h-4 w-4" />
+                </span>
+              </div>
+            </div>
           </div>
-          {hydrated && conversations.length ? (
-            <ul className="mt-3 divide-y divide-border">
-              {conversations.slice(0, 3).map((c) => (
-                <li key={c.id}>
-                  <Link href={`/chat?id=${c.id}`} className="flex items-center gap-3 py-3 hover:text-primary">
-                    {c.mode === "voice" ? <AudioLines className="h-4 w-4 shrink-0 text-accent" /> : <MessageCircle className="h-4 w-4 shrink-0 text-primary" />}
-                    <span className="min-w-0 flex-1 truncate text-sm font-medium">{conversationSummary(c).title}</span>
-                    <span className="shrink-0 text-xs text-subtle">{formatRelative(c.updatedAt)}</span>
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          ) : (
-            <p className="mt-4 text-sm leading-relaxed text-muted">Your conversations will appear here. They&apos;re stored only in this browser.</p>
-          )}
         </Card>
       </section>
 
-      <footer className="mt-12 flex items-start gap-3 rounded-3xl border border-border bg-surface/70 p-5 text-sm leading-relaxed text-muted">
-        <ShieldCheck className="mt-0.5 h-5 w-5 shrink-0 text-primary" />
+      {/* 6. Explore */}
+      <section className="mt-8" aria-labelledby="home-explore">
+        <SectionTitle id="home-explore" title="Explore" />
+        <ul className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-3">
+          {EXPLORE.map(({ href, icon: Icon, title, body, tone }, i) => (
+            <li key={href} className="animate-fade-up" style={{ animationDelay: `${60 + i * 40}ms` }}>
+              <Link
+                href={href}
+                className="flex h-full min-h-[8.5rem] flex-col rounded-3xl border border-border bg-surface p-4 shadow-soft transition-[box-shadow,transform,border-color] duration-200 ease-out hover:-translate-y-0.5 hover:border-border-strong hover:shadow-lift sm:p-5"
+              >
+                <span aria-hidden className={cn("flex h-12 w-12 items-center justify-center rounded-2xl", tone)}>
+                  <Icon className="h-6 w-6" />
+                </span>
+                <span className="mt-3 text-base font-semibold leading-snug text-fg">{title}</span>
+                <span className="mt-0.5 text-[0.9375rem] leading-snug text-muted">{body}</span>
+              </Link>
+            </li>
+          ))}
+        </ul>
+      </section>
+
+      <footer className="mt-10 flex items-start gap-3 rounded-3xl border border-border bg-surface/70 p-5 text-[0.9375rem] leading-relaxed text-muted">
+        <ShieldCheck className="mt-0.5 h-5 w-5 shrink-0 text-primary" aria-hidden />
         <p>
-          {DISCLAIMER} If you&apos;re struggling or in danger, please{" "}
-          <Link href="/support" className="font-semibold text-danger hover:underline">
-            reach out to a crisis line
+          {DISCLAIMER} If you&apos;re struggling or in danger,{" "}
+          <Link href="/support" className="font-semibold text-danger underline-offset-4 hover:underline">
+            get help now
           </Link>
-          . This is an MVP demo using fictional sample data — no accounts, subscriptions or payments.
+          .
         </p>
       </footer>
     </div>

@@ -2,61 +2,71 @@
 
 @custom-variant dark (&:where(.dark, .dark *));
 
-/* ───────────── Design tokens: calm teal + soft lavender, warm accents ───────────── */
+/* ───────────── Design tokens: warm off-white, calm teal, soft lavender, peach ─────────────
+   Light is the default. Every colour that carries text meets WCAG AA on bg and surface.
+   --peach / --lavender are decoration only (never text on a light surface). */
 :root {
-  --bg: #f4f8f7;
+  --bg: #f7f5f0;
   --surface: #ffffff;
-  --surface-2: #edf4f2;
-  --surface-3: #e3edea;
-  --fg: #11302e;
-  --muted: #47625f;
-  --subtle: #5e7774;
-  --border: #d9e5e2;
-  --primary: #0f766e;
-  --primary-hover: #0c625b;
+  --surface-2: #f1eee7;
+  --surface-3: #e8e3d9;
+  --fg: #1f2d2b;
+  --muted: #55605e;
+  --subtle: #5f6a68;
+  --border: #e6e1d8;
+  --border-strong: #d4cdc0;
+  --primary: #0e7c74;
+  --primary-hover: #0b6760;
   --primary-fg: #ffffff;
-  --primary-soft: #d6eeea;
-  --accent: #6553c9;
-  --accent-soft: #ebe7fb;
-  --warm: #a2560c;
-  --warm-soft: #fbefdc;
+  --primary-soft: #dcefeb;
+  --accent: #6a5ccb;
+  --accent-soft: #ece9fa;
+  --lavender: #7c6fd6;
+  --peach: #f2a86b;
+  --peach-soft: #fdeedf;
+  --warm: #9a5410;
+  --warm-soft: #fcecdc;
   --danger: #b42318;
-  --danger-soft: #fdeceb;
+  --danger-soft: #fcebe9;
   --success: #157a3b;
-  --success-soft: #def5e6;
-  --ring: #0f766e;
-  --shadow-soft: 0 1px 2px rgb(17 48 46 / 0.04), 0 8px 24px -12px rgb(17 48 46 / 0.12);
-  --shadow-lift: 0 2px 4px rgb(17 48 46 / 0.05), 0 18px 40px -18px rgb(17 48 46 / 0.22);
-  --topbar-h: 3.5rem;
-  --bottomnav-h: calc(4.25rem + env(safe-area-inset-bottom));
+  --success-soft: #e1f3e7;
+  --ring: #0e7c74;
+  --shadow-soft: 0 1px 2px rgb(31 45 43 / 0.04), 0 6px 20px -12px rgb(31 45 43 / 0.12);
+  --shadow-lift: 0 2px 6px rgb(31 45 43 / 0.06), 0 18px 40px -18px rgb(31 45 43 / 0.24);
+  --topbar-h: 4rem;
+  --bottomnav-h: calc(4.5rem + env(safe-area-inset-bottom));
   --chrome-h: calc(var(--topbar-h) + var(--bottomnav-h));
   color-scheme: light;
 }
 
 .dark {
-  --bg: #0a1514;
-  --surface: #10201e;
-  --surface-2: #152826;
-  --surface-3: #1b3230;
-  --fg: #e2efed;
-  --muted: #a4bcb9;
-  --subtle: #8ea8a5;
-  --border: #233a37;
-  --primary: #5cc4b5;
-  --primary-hover: #7ad3c6;
-  --primary-fg: #03201d;
-  --primary-soft: #143a36;
-  --accent: #a99bf0;
-  --accent-soft: #252047;
-  --warm: #f0b46b;
-  --warm-soft: #3a2a14;
+  --bg: #0e1716;
+  --surface: #16211f;
+  --surface-2: #1c2927;
+  --surface-3: #24332f;
+  --fg: #e8f0ee;
+  --muted: #a9bab7;
+  --subtle: #95a7a4;
+  --border: #283734;
+  --border-strong: #354642;
+  --primary: #6fd1c3;
+  --primary-hover: #8adcd0;
+  --primary-fg: #06231f;
+  --primary-soft: #173430;
+  --accent: #ada2f2;
+  --accent-soft: #252140;
+  --lavender: #9d91ec;
+  --peach: #f2a86b;
+  --peach-soft: #35261a;
+  --warm: #f2b47a;
+  --warm-soft: #36281a;
   --danger: #f4948b;
-  --danger-soft: #3b1714;
-  --success: #74d6a0;
-  --success-soft: #133222;
-  --ring: #5cc4b5;
+  --danger-soft: #3a1a17;
+  --success: #7ad6a2;
+  --success-soft: #15301f;
+  --ring: #6fd1c3;
   --shadow-soft: 0 1px 2px rgb(0 0 0 / 0.3), 0 8px 24px -12px rgb(0 0 0 / 0.5);
-  --shadow-lift: 0 2px 4px rgb(0 0 0 / 0.35), 0 18px 40px -18px rgb(0 0 0 / 0.6);
+  --shadow-lift: 0 2px 6px rgb(0 0 0 / 0.35), 0 18px 40px -18px rgb(0 0 0 / 0.6);
   color-scheme: dark;
 }
 
@@ -76,12 +86,16 @@
   --color-muted: var(--muted);
   --color-subtle: var(--subtle);
   --color-border: var(--border);
+  --color-border-strong: var(--border-strong);
   --color-primary: var(--primary);
   --color-primary-hover: var(--primary-hover);
   --color-primary-fg: var(--primary-fg);
   --color-primary-soft: var(--primary-soft);
   --color-accent: var(--accent);
   --color-accent-soft: var(--accent-soft);
+  --color-lavender: var(--lavender);
+  --color-peach: var(--peach);
+  --color-peach-soft: var(--peach-soft);
   --color-warm: var(--warm);
   --color-warm-soft: var(--warm-soft);
   --color-danger: var(--danger);
@@ -93,8 +107,9 @@
   --font-serif: var(--font-lora), ui-serif, Georgia, serif;
   --shadow-soft: var(--shadow-soft);
   --shadow-lift: var(--shadow-lift);
-  --animate-fade-up: fade-up 0.45s cubic-bezier(0.22, 1, 0.36, 1) both;
-  --animate-fade-in: fade-in 0.3s ease-out both;
+  --animate-fade-up: fade-up 0.3s cubic-bezier(0.22, 1, 0.36, 1) both;
+  --animate-fade-in: fade-in 0.25s ease-out both;
+  --animate-sheet-up: sheet-up 0.28s cubic-bezier(0.22, 1, 0.36, 1) both;
   --animate-breathe: breathe 6s ease-in-out infinite;
   --animate-float: float 9s ease-in-out infinite;
 }
@@ -102,6 +117,10 @@
 @keyframes fade-up {
   from { opacity: 0; transform: translateY(10px); }
   to { opacity: 1; transform: translateY(0); }
+}
+@keyframes sheet-up {
+  from { transform: translateY(100%); }
+  to { transform: translateY(0); }
 }
 @keyframes fade-in {
   from { opacity: 0; }
@@ -139,12 +158,14 @@ html {
 body {
   background: var(--bg);
   color: var(--fg);
+  font-size: 1rem;
+  line-height: 1.6;
   font-feature-settings: "cv11", "ss01";
   -webkit-font-smoothing: antialiased;
   touch-action: manipulation;
 }
 
-/* Soft ambient glow behind everything */
+/* Soft, warm ambient glow behind everything (kept very low so text stays crisp). */
 .ambient {
   position: fixed;
   inset: 0;
@@ -156,23 +177,32 @@ body {
 .ambient::after {
   content: "";
   position: absolute;
-  width: 46rem;
-  height: 46rem;
+  width: 40rem;
+  height: 40rem;
   border-radius: 9999px;
-  filter: blur(90px);
-  opacity: 0.55;
-  animation: float 18s ease-in-out infinite;
+  filter: blur(100px);
+  opacity: 0.45;
+  animation: float 24s ease-in-out infinite;
 }
 .ambient::before {
-  top: -18rem;
-  right: -12rem;
-  background: radial-gradient(circle, var(--primary-soft), transparent 70%);
+  top: -20rem;
+  right: -14rem;
+  background: radial-gradient(circle, var(--peach-soft), transparent 70%);
 }
 .ambient::after {
-  bottom: -22rem;
-  left: -14rem;
-  background: radial-gradient(circle, var(--accent-soft), transparent 70%);
-  animation-delay: -9s;
+  bottom: -24rem;
+  left: -16rem;
+  background: radial-gradient(circle, var(--primary-soft), transparent 70%);
+  animation-delay: -12s;
+}
+.dark .ambient::before,
+.dark .ambient::after {
+  opacity: 0.35;
+}
+
+/* Ari's brand orb, reusable as an avatar fill: <span class="bg-orb rounded-full" /> */
+@utility bg-orb {
+  background: radial-gradient(circle at 30% 25%, color-mix(in oklab, white 35%, var(--primary)), var(--primary) 45%, var(--accent));
 }
 
 .h-app {
@@ -214,6 +244,15 @@ body {
 }
 
 @media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+  /* Decorative, looping motion is switched off entirely. */
+  .ambient::before,
+  .ambient::after,
+  .typing-dot {
+    animation: none !important;
+  }
   *,
   *::before,
   *::after {

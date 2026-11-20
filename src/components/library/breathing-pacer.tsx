@@ -2,6 +2,7 @@
 
 import { Pause, Play } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
+import { Button } from "@/components/ui/button";
 
 /** Animated breathing guide: the circle expands on the in-breath and softens on the out-breath. */
 export function BreathingPacer({ inhale, hold = 0, exhale, holdAfter = 0 }: { inhale: number; hold?: number; exhale: number; holdAfter?: number }) {
@@ -31,34 +32,42 @@ export function BreathingPacer({ inhale, hold = 0, exhale, holdAfter = 0 }: { in
 
   const phase = phases[state.index];
   const scale = running ? phase.scale : 0.7;
+  const pattern = [inhale, hold, exhale, holdAfter].filter(Boolean).join("-");
 
   return (
-    <div className="flex flex-col items-center rounded-3xl bg-surface-2 px-6 py-8">
-      <div className="relative flex h-56 w-56 items-center justify-center">
-        <span className="absolute inset-0 rounded-full border border-primary/20" />
+    <div className="flex flex-col items-center rounded-3xl bg-surface-2 px-5 py-8 sm:px-8 sm:py-10">
+      <p className="text-center text-base text-muted">
+        Follow the circle. Breathe in as it grows, out as it shrinks.{" "}
+        <span className="whitespace-nowrap">({pattern} rhythm)</span>
+      </p>
+      <div className="relative mt-6 flex h-64 w-64 items-center justify-center sm:h-72 sm:w-72">
+        <span className="absolute inset-0 rounded-full border-2 border-primary/20" aria-hidden />
         {/* Solid fill + on-primary text keeps the instruction at WCAG AA contrast in both themes. */}
         <span
+          aria-hidden
           className="absolute inset-0 rounded-full bg-linear-to-br from-primary to-accent shadow-lift"
           style={{ transform: `scale(${scale})`, transition: `transform ${running ? phase.seconds : 0.6}s ease-in-out` }}
         />
         <div className="relative text-center text-primary-fg" aria-live="polite">
-          <p className="text-lg font-semibold">{running ? phase.label : "Ready"}</p>
-          {running && <p className="text-3xl font-semibold tabular-nums">{state.count}</p>}
+          <p className="text-xl font-semibold">{running ? phase.label : "Ready when you are"}</p>
+          {running && <p className="mt-1 text-5xl font-semibold tabular-nums">{state.count}</p>}
         </div>
       </div>
-      <button
-        type="button"
+      <Button
+        size="lg"
+        variant={running ? "secondary" : "primary"}
+        className="mt-8 min-w-56"
+        aria-pressed={running}
         onClick={() => {
           if (!running) setState({ index: 0, count: phases[0].seconds, cycles: 0 });
           setRunning((r) => !r);
         }}
-        className="mt-6 inline-flex h-11 cursor-pointer items-center gap-2 rounded-full bg-primary px-5 font-medium text-primary-fg hover:bg-primary-hover"
       >
-        {running ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4" />}
-        {running ? "Pause" : "Start breathing guide"}
-      </button>
-      <p className="mt-3 text-xs text-subtle">
-        {state.cycles > 0 ? `${state.cycles} ${state.cycles === 1 ? "breath" : "breaths"} completed · ` : ""}Stop if you feel light-headed.
+        {running ? <Pause className="h-5 w-5" aria-hidden /> : <Play className="h-5 w-5" aria-hidden />}
+        {running ? "Pause" : "Start breathing"}
+      </Button>
+      <p className="mt-4 text-center text-[0.9375rem] text-muted">
+        {state.cycles > 0 ? `${state.cycles} ${state.cycles === 1 ? "breath" : "breaths"} done. ` : ""}Stop if you feel light-headed.
       </p>
     </div>
   );
