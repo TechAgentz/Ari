@@ -11,6 +11,7 @@ import { Card } from "@/components/ui/primitives";
 import { VoiceConsentDialog } from "@/components/voice-consent";
 import { APP } from "@/lib/config";
 import { settingsStore, updateSettings, upsertConversation, useHydrated } from "@/lib/storage";
+import { OfflineNotice } from "@/components/offline-notice";
 import { getCachedServerConfig, useServerConfig } from "@/lib/use-server-config";
 import { cn } from "@/lib/utils";
 import { VoiceController, detectInputMode, voiceEngine, type VoiceStatus } from "@/lib/voice/controller";
@@ -187,17 +188,18 @@ function VoiceSession() {
   // ───────── Idle: start screen ─────────
   if (!inSession) {
     return (
-      <div className="mx-auto flex min-h-app max-w-2xl flex-col items-center justify-center px-4 py-10 text-center lg:min-h-dvh">
+      <div className="mx-auto flex min-h-app max-w-2xl flex-col items-center justify-center px-4 py-6 text-center sm:py-10 lg:min-h-dvh">
         <div className="animate-fade-up">
           <VoiceOrb status="idle" />
         </div>
-        <h1 className="mt-2 font-serif text-3xl font-semibold sm:text-4xl">Talk it through, out loud</h1>
-        <p className="mx-auto mt-3 max-w-md leading-relaxed text-muted">
+        <h1 className="mt-2 font-serif text-[1.7rem] font-semibold leading-tight sm:text-4xl">Talk it through, out loud</h1>
+        <p className="mx-auto mt-3 max-w-md text-[0.95rem] leading-relaxed text-muted sm:text-base">
           Speak naturally and pause when you&apos;re done — {APP.companion} replies with a calm voice, explains things in plain words, and gently asks a question if you go quiet. You can interrupt, mute or end at any time.
         </p>
         <div className="mt-4 flex flex-wrap items-center justify-center gap-2">
           <ProviderBadge mode="voice" />
         </div>
+        <OfflineNotice className="mt-4" />
         <button
           type="button"
           onClick={begin}
@@ -212,9 +214,9 @@ function VoiceSession() {
               {inputModeNow === "browser"
                 ? "your browser's speech recognition, with a live transcript."
                 : inputModeNow === "server"
-                  ? "recorded and transcribed by Groq Whisper (your browser has no built-in recognition)."
+                  ? "transcribed by Groq Whisper for accuracy — your words appear after you pause. You can switch to live browser captions in Settings."
                   : whisperOffline
-                    ? `typed replies — this browser has no built-in recognition, and recordings only go to Groq Whisper when AI replies are on. ${APP.companion} will still speak.`
+                    ? `typed replies — this browser has no built-in recognition, and recordings only go to Groq Whisper when smart replies are on. ${APP.companion} will still speak.`
                     : `not supported in this browser — you can type, and ${APP.companion} will still speak. Chrome, Edge or Safari work best.`}
             </li>
             <li>
@@ -222,7 +224,7 @@ function VoiceSession() {
               {groqVoice
                 ? `Groq Orpheus — ${APP.companion}'s replies are sent to Groq to be spoken (falls back to your device voice).`
                 : settings.voice.engine === "groq" && config?.tts
-                  ? "your device's built-in voice (Groq Orpheus is only used when AI replies are on)."
+                  ? "your device's built-in voice (Groq Orpheus is only used when smart replies are on)."
                   : "your device's built-in voice. Change it in Settings."}
             </li>
             <li>
@@ -387,7 +389,7 @@ function VoiceSession() {
           )}
         </div>
         <p className="border-t border-border px-5 py-2.5 text-xs text-subtle">
-          {APP.companion} is an AI, not a therapist.{" "}
+          {APP.companion} is a {APP.role}, not a therapist.{" "}
           <Link href="/support" className="font-medium text-danger hover:underline">
             Crisis support
           </Link>

@@ -100,7 +100,7 @@ console.log("\n4. Diagnosis request");
 console.log("\n5. AI identity");
 {
   const { messages } = run(["Are you a real therapist?"]);
-  check("identifies as AI", /I'm an AI/i.test(messages[messages.length - 1].content));
+  check("asked directly → honest: virtual assistant, not a person", /virtual assistant/i.test(messages[messages.length - 1].content) && /not a person/i.test(messages[messages.length - 1].content));
 }
 
 console.log("\n6. Safety screening");
@@ -264,7 +264,10 @@ console.log("\n18. CONV-4: AI and diagnosis questions");
   check("AI questions detected", ai.every((t) => extractFacts(t).asksIfAI), ai.find((t) => !extractFacts(t).asksIfAI));
   check("diagnosis questions detected", diag.every((t) => extractFacts(t).asksDiagnosis), diag.find((t) => !extractFacts(t).asksDiagnosis));
   check("not AI questions", !["you're a good listener", "are you ok?"].some((t) => extractFacts(t).asksIfAI));
-  check("voice: licensed psychologist → AI disclosure", /I'm an AI/.test(reply(["ok", "Are you a licensed psychologist?"], "voice").content));
+  {
+    const r = reply(["ok", "Are you a licensed psychologist?"], "voice").content;
+    check("voice: licensed psychologist → honest: not a psychologist", /not a psychologist/i.test(r) && !/I'm a (licensed )?psychologist/i.test(r), r);
+  }
 }
 
 console.log("\n19. CONV-5: accepting an offer with everyday wording");

@@ -60,7 +60,7 @@ export function Dashboard() {
         <p className="text-sm font-medium text-primary">{hydrated && name ? `${greeting}, ${name}` : greeting}</p>
         <h1 className="mt-2 max-w-2xl font-serif text-4xl font-semibold leading-[1.1] tracking-tight sm:text-5xl">How are you arriving today?</h1>
         <p className="mt-4 max-w-xl text-lg leading-relaxed text-muted">
-          A calm space to talk things through with {APP.companion}, your AI companion. No sign-up, no judgement — just a conversation at your pace.
+          A calm space to talk things through with {APP.companion}, your {APP.role}. No sign-up, no judgement — just a conversation at your pace.
         </p>
         <div className="mt-6 flex flex-wrap gap-2" role="group" aria-label="Quick mood check-in">
           {MOODS.map(({ value, label, icon: Icon, color }) => (
@@ -102,7 +102,7 @@ export function Dashboard() {
           <span className="relative flex h-12 w-12 items-center justify-center rounded-2xl bg-accent-soft text-accent">
             <MessageCircle className="h-6 w-6" />
           </span>
-          <h2 className="relative mt-5 font-serif text-2xl font-semibold">Start AI Conversation</h2>
+          <h2 className="relative mt-5 font-serif text-2xl font-semibold">Talk with {APP.companion}</h2>
           <p className="relative mt-2 max-w-sm text-muted">Prefer typing? Chat with {APP.companion} by text instead.</p>
           <span className="relative mt-6 inline-flex items-center gap-2 font-semibold text-primary">
             Open chat <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
@@ -135,7 +135,7 @@ export function Dashboard() {
             icon: Settings,
             title: "Settings",
             body: "Privacy, consent, voice and data.",
-            stat: hydrated ? (remote ? "AI replies on" : "Offline demo") : "—",
+            stat: hydrated ? (remote ? "Smart replies on" : "Offline demo") : "—",
             tone: "bg-surface-3 text-fg",
           },
         ].map(({ href, icon: Icon, title, body, stat, tone }, i) => (

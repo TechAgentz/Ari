@@ -28,6 +28,7 @@ import {
   useHydrated,
 } from "@/lib/storage";
 import type { ChatMessage, Conversation, MessageMeta, TopicId } from "@/lib/types";
+import { OfflineNotice } from "@/components/offline-notice";
 import { useServerConfig } from "@/lib/use-server-config";
 import { now, titleFromMessage, uid } from "@/lib/utils";
 import { Composer } from "./composer";
@@ -80,7 +81,7 @@ function practiceOpening(entry: KnowledgeEntry): { text: string; meta: MessageMe
   const t = entry.technique!;
   const duration = t.duration.charAt(0).toLowerCase() + t.duration.slice(1);
   return {
-    text: `Hi, I'm ${APP.companion} — an AI companion, not a therapist. I'd be glad to guide you through **${t.name}** (${duration}) from the library. Shall I walk you through it now?`,
+    text: `Hi, I'm ${APP.companion}, your ${APP.role}. I'd be glad to guide you through **${t.name}** (${duration}) from the library. Shall I walk you through it now?`,
     meta: { provider: "demo", stage: "support", topic: "technique", techniqueOffered: entry.slug, sources: [{ slug: entry.slug, title: entry.title }] },
   };
 }
@@ -305,8 +306,9 @@ function ChatSession({
         <div className="mx-auto flex max-w-3xl flex-col gap-5 px-4 py-6 sm:px-6" aria-live="polite" aria-relevant="additions">
           <p className="mx-auto flex max-w-md items-center gap-2 rounded-full bg-surface-2 px-4 py-2 text-center text-xs text-muted">
             <ShieldCheck className="h-4 w-4 shrink-0 text-primary" />
-            {remote ? "Saved only in this browser. Contact details are removed before messages reach the AI." : "Saved only in this browser. Offline demo — nothing leaves your device."}
+            {remote ? "Saved only in this browser. Contact details are removed before messages reach Groq." : "Saved only in this browser. Offline demo — nothing leaves your device."}
           </p>
+          <OfflineNotice />
           {messages.map((m) => (
             <div key={m.id}>
               <MessageBubble message={m} />
@@ -347,7 +349,7 @@ function ChatSession({
             </>
           )}
           <p className="mt-2 text-center text-xs text-subtle">
-            {APP.companion} is an AI, not a licensed psychologist, and can&apos;t diagnose.{" "}
+            {APP.companion} is a {APP.role}, not a psychologist, and can&apos;t diagnose.{" "}
             <Link href="/support" className="font-medium text-danger underline-offset-4 hover:underline">
               In crisis? Get help now
             </Link>

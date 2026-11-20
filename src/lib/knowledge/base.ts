@@ -780,7 +780,7 @@ export const KNOWLEDGE_BASE: KnowledgeEntry[] = [
     body: [
       "Consider reaching out to a doctor or licensed mental health professional if: difficult feelings last for more than a couple of weeks; they affect work, study, relationships or sleep; you're relying on alcohol or other substances to cope; or friends and family have said they're worried.",
       "A good first step is often a GP or primary care doctor, a university or workplace counselling service, or a licensed therapist directory in your country. If you ever have thoughts of harming yourself, please contact a crisis line or emergency services right away.",
-      "Only qualified professionals can assess and diagnose mental health conditions. An AI companion like this one can't — but it can help you think about what to say when you reach out.",
+      "Only qualified professionals can assess and diagnose mental health conditions. A virtual assistant like Ari can't — but it can help you think about what to say when you reach out.",
     ],
     sources: [SRC.nimh, SRC.nhsSelfHelp, SRC.lifeline],
     readMinutes: 3,

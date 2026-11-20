@@ -607,6 +607,16 @@ async function main() {
     check("no recognition + offline → typed replies (no Whisper)", detectInputMode(GROQ, makeSettings(false)) === "text");
     check("no recognition + AI on → Whisper", detectInputMode(GROQ, makeSettings(true)) === "server");
     check("no settings → never Whisper", detectInputMode(GROQ) === "text");
+    setRecognition(true);
+    check("browser recogniser + AI on → Whisper by default (more accurate)", detectInputMode(GROQ, makeSettings(true)) === "server");
+    const prefersBrowser = makeSettings(true);
+    prefersBrowser.voice.recognition = "browser";
+    check("live-captions preference → browser recogniser", detectInputMode(GROQ, prefersBrowser) === "browser");
+    check("browser recogniser + offline → browser (no Whisper)", detectInputMode(GROQ, makeSettings(false)) === "browser");
+    setRecognition(false);
+    const { cleanTranscript } = await import("../src/lib/voice/recognition");
+    check("Whisper phantom 'Thanks for watching!' dropped", cleanTranscript(" Thanks for watching! ") === "");
+    check("real 'Thank you.' kept", cleanTranscript("Thank you.") === "Thank you.");
     check("Orpheus chosen + offline → device voice", voiceEngine(makeSettings(false, "groq"), GROQ) === "browser");
     check("Orpheus chosen + AI on → Orpheus", voiceEngine(makeSettings(true, "groq"), GROQ) === "groq");
     check("Orpheus chosen but not configured → device voice", voiceEngine(makeSettings(true, "groq"), { ...GROQ, tts: false }) === "browser");
@@ -614,7 +624,7 @@ async function main() {
     fetchLog.length = 0;
     const { c, status } = session(makeSettings(false, "groq"), GROQ);
     await c.start();
-    check("offline session: typed input with an accurate notice", c.getSnapshot().inputMode === "text" && /only sent to Groq Whisper when AI replies are on/.test(c.getSnapshot().notice ?? ""), c.getSnapshot().notice);
+    check("offline session: typed input with an accurate notice", c.getSnapshot().inputMode === "text" && /only sent to Groq Whisper when smart replies are on/.test(c.getSnapshot().notice ?? ""), c.getSnapshot().notice);
     await until(() => status() === "listening");
     c.sendText("You can call me Sam");
     await until(() => status() === "listening" && c.getSnapshot().messages.length === 3);

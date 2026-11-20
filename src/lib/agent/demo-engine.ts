@@ -41,10 +41,10 @@ const wordCount = (t: string) => t.trim().split(/\s+/).filter(Boolean).length;
 
 export function openingMessage(mode: Mode, seed = Date.now()): EngineReply {
   const chat = [
-    `Hi there, I'm ${APP.companion} — an AI companion, here to chat and listen. I'm not a therapist, just a friendly ear. How's your day going so far?`,
-    `Hello! I'm ${APP.companion}, an AI companion. It's nice to meet you. I'm here to chat about whatever's on your mind — how has today been treating you?`,
+    `Hi there, I'm ${APP.companion}, your ${APP.role}. I work alongside ${APP.careTeam} and I'm here to chat and listen. How's your day going so far?`,
+    `Hello! I'm ${APP.companion}, a ${APP.role} working alongside ${APP.careTeam}. It's nice to meet you. How has today been treating you?`,
   ];
-  const voice = [`Hi, I'm ${APP.companion}, an AI companion. It's nice to hear from you. How's your day going so far?`];
+  const voice = [`Hi, I'm ${APP.companion}, your ${APP.role}. I work alongside ${APP.careTeam}. How's your day going so far?`];
   return {
     text: pick(mode === "voice" ? voice : chat, Math.floor(seed / 1000)),
     meta: { provider: "demo", stage: "intro", topic: "day", questionId: "intro_day" },
@@ -357,7 +357,7 @@ function generateScriptedReply(messages: ChatMessage[], s: ConversationState, mo
   if (f.asksIfAI) {
     const q = pickNextQuestion(s);
     return {
-      text: `I'm an AI — a conversational companion, not a person and not a licensed psychologist or therapist. I can listen, share general wellbeing information and coping ideas, but I can't diagnose anything or replace professional care. ${q ? questionText(q, s, seed, recent) : ""}`.trim(),
+      text: `I'm ${APP.companion}, a virtual assistant (AI-powered) working alongside ${APP.careTeam} — not a person, and not a psychologist or therapist myself. I can listen, share general wellbeing information and coping ideas, but I can't diagnose anything or replace professional care. ${q ? questionText(q, s, seed, recent) : ""}`.trim(),
       meta: { ...base, topic: q?.topic, questionId: q?.id, stage: q?.stage ?? s.stage },
     };
   }
@@ -367,8 +367,8 @@ function generateScriptedReply(messages: ChatMessage[], s: ConversationState, mo
     return {
       text:
         mode === "voice"
-          ? "I can't diagnose anything — I'm an AI, and only a qualified professional who can properly assess you could do that. If it's been affecting your daily life for a while, talking to a doctor or licensed therapist is a really good step. Would it help to talk about what you've been noticing?"
-          : "That's a really understandable question, but I can't diagnose anything — I'm an AI, and only a qualified professional who can properly assess you can do that.\n\nWhat I can say is that if something has been affecting your daily life for more than a couple of weeks, it's a good time to talk with a doctor or licensed mental health professional. Would it help to talk through what you've been noticing?",
+          ? "I can't diagnose anything — I'm a virtual assistant, and only a qualified professional who can properly assess you could do that. If it's been affecting your daily life for a while, talking to a doctor or licensed therapist is a really good step. Would it help to talk about what you've been noticing?"
+          : "That's a really understandable question, but I can't diagnose anything — I'm a virtual assistant, and only a qualified professional who can properly assess you can do that.\n\nWhat I can say is that if something has been affecting your daily life for more than a couple of weeks, it's a good time to talk with a doctor or licensed mental health professional. Would it help to talk through what you've been noticing?",
       meta: { ...base, stage: "support", topic: "support_followup", questionId: "sup_diagnosis", sources: seekHelp ? [{ slug: seekHelp.slug, title: seekHelp.title }] : undefined },
     };
   }
@@ -433,7 +433,7 @@ function generateScriptedReply(messages: ChatMessage[], s: ConversationState, mo
   // 5. Relationship-building flow (stages 1–4).
   const ack = acknowledge(s, seed, mode, lastText);
   const companionAnswer = f.asksAboutCompanion
-    ? pick(["I'm an AI, so I don't have days quite like you do — but I'm really glad to be chatting with you.", "Thanks for asking! As an AI I don't have days of my own, but this is a nice part of mine."], seed)
+    ? pick(["I'm a virtual assistant, so I don't have days quite like you do — but I'm really glad to be chatting with you.", "Thanks for asking! I don't have days of my own, but this is a nice part of mine."], seed)
     : "";
   const q = pickNextQuestion(s);
   const text = [ack, companionAnswer, q ? questionText(q, s, seed + 7, recent) : ""].filter(Boolean).join(" ");

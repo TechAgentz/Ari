@@ -75,7 +75,7 @@ export function AppShell({ children }: { children: ReactNode }) {
             </span>
           </Link>
           <p className="px-2 text-xs leading-relaxed text-subtle">
-            {APP.companion} is an AI, not a licensed psychologist. No account, no payments — data stays in this browser.
+            {APP.companion} is a {APP.role}, not a psychologist. No account, no payments — data stays in this browser.
           </p>
         </div>
       </aside>

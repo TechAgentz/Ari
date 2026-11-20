@@ -22,10 +22,9 @@ export function VoiceConsentDialog({ open, onClose, onAllow }: { open: boolean; 
         <li className="flex gap-3">
           <span className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-primary-soft text-primary">1</span>
           <span>
-            Your browser turns speech into text. In Chrome and Edge this uses the browser maker&apos;s online speech service; Safari may process it on your device or with Apple.
-            {remote && config?.stt
-              ? " If your browser can't do this, the recording is sent to Groq Whisper for transcription and not stored."
-              : " If your browser can't do this, you can type your replies instead."}
+            {remote && config?.stt && settings.voice.recognition !== "browser"
+              ? "Each thing you say is recorded and sent to Groq Whisper to turn it into text. The recording isn't stored. (If you choose live browser captions in Settings, your browser's own speech service is used instead.)"
+              : "Your browser turns speech into text. In Chrome and Edge this uses the browser maker's online speech service; Safari may process it on your device or with Apple. If your browser can't do this, you can type your replies instead."}
           </span>
         </li>
         <li className="flex gap-3">

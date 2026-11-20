@@ -5,6 +5,10 @@
 export const APP = {
   name: "Haven",
   companion: "Ari",
+  /** How Ari introduces itself. It is never presented as a person or a clinician. */
+  role: "virtual care assistant",
+  /** Who Ari works alongside (shown in introductions). Change to suit the practice. */
+  careTeam: "your psychologist",
   tagline: "A calm space to talk things through",
   version: "0.1.0-demo",
 } as const;
@@ -34,4 +38,4 @@ export const STAGES = [
 ] as const;
 
 export const DISCLAIMER =
-  `${APP.companion} is an AI companion, not a licensed psychologist or therapist. It can't diagnose conditions and isn't for emergencies.`;
+  `${APP.companion} is a ${APP.role} working alongside ${APP.careTeam} — not a psychologist or therapist. It can't diagnose conditions and isn't for emergencies.`;

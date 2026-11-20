@@ -63,14 +63,18 @@ function serverSttAvailable(config: ServerConfig | null): boolean {
  * recordings are never sent to the server.
  */
 export function detectInputMode(config: ServerConfig | null, settings?: Settings): InputMode {
+  const whisper = serverSttAvailable(config) && serverVoiceAllowed(settings, config);
+  // Whisper is far more reliable than built-in recognisers on phones (iOS especially) and with accents,
+  // so it's the default whenever it may be used; the browser's recogniser is the fallback.
+  if (whisper && settings?.voice.recognition !== "browser") return "server";
   if (getRecognitionCtor()) return "browser";
-  if (serverSttAvailable(config) && serverVoiceAllowed(settings, config)) return "server";
+  if (whisper) return "server";
   return "text";
 }
 
 function typingNotice(config: ServerConfig | null): string {
   return serverSttAvailable(config)
-    ? "This browser has no built-in speech recognition, and recordings are only sent to Groq Whisper when AI replies are on. You can type your replies and Ari will still speak."
+    ? "This browser has no built-in speech recognition, and recordings are only sent to Groq Whisper when smart replies are on. You can type your replies and Ari will still speak."
     : "Voice input isn't supported in this browser — you can type your replies and Ari will still speak.";
 }
 
@@ -333,7 +337,7 @@ export class VoiceController {
         void this.meter.start();
       }
     } else {
-      listener = new RecorderListener(handlers);
+      listener = new RecorderListener(handlers, undefined, this.turnPauseMs());
     }
     this.listener = listener;
     this.set({ status: "listening", interim: "", error: null });
@@ -464,7 +468,7 @@ export class VoiceController {
       messages: [...this.snap.messages, assistant],
       streaming: "",
       streamingMeta: null,
-      notice: result.meta.fallback ? "The AI provider was unavailable, so Ari answered in demo mode." : this.snap.notice,
+      notice: result.meta.fallback ? "Groq was unavailable, so Ari answered in offline mode." : this.snap.notice,
       ...this.safetyPatch(result.meta.safety === "crisis" || result.meta.safety === "distress", result.meta.safetyCategories),
     });
     this.save();

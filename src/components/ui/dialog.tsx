@@ -66,7 +66,7 @@ export function Dialog({
         if (dismissible && e.target === ref.current) onClose();
       }}
       className={cn(
-        "m-auto w-[min(100%-2rem,34rem)] max-h-[calc(100dvh-2rem)] overflow-y-auto rounded-3xl border border-border bg-surface p-0 text-fg shadow-lift backdrop:bg-black/50 backdrop:backdrop-blur-[2px] open:animate-fade-up",
+        "m-auto w-[min(100%-2rem,34rem)] text-left max-h-[calc(100dvh-2rem)] overflow-y-auto rounded-3xl border border-border bg-surface p-0 text-fg shadow-lift backdrop:bg-black/50 backdrop:backdrop-blur-[2px] open:animate-fade-up",
         className,
       )}
     >

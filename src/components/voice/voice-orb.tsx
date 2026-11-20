@@ -17,7 +17,7 @@ export function VoiceOrb({ status, id }: { status: VoiceStatus; id?: string }) {
   return (
     <div
       id={id}
-      className="relative flex h-60 w-60 items-center justify-center sm:h-72 sm:w-72"
+      className="relative flex h-44 w-44 items-center justify-center min-[400px]:h-52 min-[400px]:w-52 sm:h-72 sm:w-72"
       style={{ ["--level" as string]: 0 }}
       aria-hidden
     >

@@ -91,7 +91,7 @@ export const DEFAULT_SETTINGS: Settings = {
   theme: "system",
   aiMode: "auto",
   consent: { ai: false, voice: false, context: false },
-  voice: { output: true, engine: "browser", rate: 1, checkIns: true, checkInSeconds: 8 },
+  voice: { output: true, engine: "browser", recognition: "auto", rate: 1, checkIns: true, checkInSeconds: 8 },
 };
 
 export { SETTINGS_KEY };

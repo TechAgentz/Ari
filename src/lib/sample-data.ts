@@ -24,7 +24,7 @@ export function buildSampleData(now = Date.now()): { conversations: Conversation
       updatedAt: c1Start + 12 * 45_000,
       sample: true,
       messages: msgs(c1Start, [
-        ["assistant", "Hi there, I'm Ari — an AI companion, here to chat and listen. I'm not a therapist, just a friendly ear. How's your day going so far?", { stage: "intro", topic: "day", questionId: "intro_day" }],
+        ["assistant", "Hi there, I'm Ari, your virtual care assistant. I work alongside your psychologist and I'm here to chat and listen. How's your day going so far?", { stage: "intro", topic: "day", questionId: "intro_day" }],
         ["user", "Busy but okay. Lots of deadlines this week."],
         ["assistant", "That sounds like a full week. By the way, what would you like me to call you? Totally fine to skip that one.", { stage: "intro", topic: "name", questionId: "intro_name" }],
         ["user", "Alex is fine"],
@@ -47,7 +47,7 @@ export function buildSampleData(now = Date.now()): { conversations: Conversation
       updatedAt: c2Start + 6 * 45_000,
       sample: true,
       messages: msgs(c2Start, [
-        ["assistant", "Hi, I'm Ari, an AI companion. It's nice to hear from you. How's your day going so far?", { stage: "intro", topic: "day", via: "voice" }],
+        ["assistant", "Hi, I'm Ari, your virtual care assistant. I work alongside your psychologist. How's your day going so far?", { stage: "intro", topic: "day", via: "voice" }],
         ["user", "Pretty good actually, I went for a long walk after work", { via: "voice" }],
         ["assistant", "Love that. What should I call you, if you'd like to share a name? No pressure at all.", { stage: "intro", topic: "name", via: "voice" }],
         ["user", "Alex", { via: "voice" }],

@@ -21,7 +21,7 @@ export function CompanionAvatar({ size = "md", pulse = false }: { size?: "sm" | 
 
 function fallbackLabel(meta?: MessageMeta) {
   if (!meta?.fallback) return null;
-  return "Answered by the offline demo — the AI provider was unavailable";
+  return "Answered by the offline demo — Groq was unavailable";
 }
 
 export function MessageBubble({ message, streaming = false }: { message: Pick<ChatMessage, "role" | "content" | "meta">; streaming?: boolean }) {

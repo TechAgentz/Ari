@@ -179,6 +179,16 @@ export class BrowserListener implements SpeechListener {
   }
 }
 
+/**
+ * Whisper sometimes "hears" stock phrases in near-silence or background noise
+ * ("Thank you.", "Thanks for watching!"). Drop those so they aren't sent as the user's turn.
+ */
+const WHISPER_PHANTOMS = /^(thanks for watching!?|thank you for watching[.!]?|you|\.+|please subscribe\.?|subtitles by .*)$/i;
+export function cleanTranscript(text: string): string {
+  const t = text.replace(/\s+/g, " ").trim();
+  return WHISPER_PHANTOMS.test(t) ? "" : t;
+}
+
 /** getUserMedia failure → listener error code. */
 function micErrorCode(err: unknown): "audio-capture" | "not-allowed" {
   const name = (err as { name?: string } | null)?.name;
@@ -197,15 +207,22 @@ export class RecorderListener implements SpeechListener {
   private silentSince = 0;
   private startedAt = 0;
   private request: AbortController | null = null;
+  private noiseFloor = 0;
+  /** The user tapped "Send now", or speech detection isn't available: upload whatever was recorded. */
+  private manual = false;
 
   constructor(
     private handlers: ListenerHandlers,
     private transcribeTimeoutMs = 30000,
+    /** Silence after speech that ends the turn. */
+    private pauseMs = 1500,
   ) {}
 
   async start() {
     this.aborted = false;
     this.heardSpeech = false;
+    this.manual = false;
+    this.noiseFloor = 0;
     this.chunks = [];
     let stream: MediaStream;
     try {
@@ -237,6 +254,9 @@ export class RecorderListener implements SpeechListener {
     if (!this.stream) return;
     try {
       this.ctx = new AudioContext();
+      // iOS/Safari create the context suspended: without resume() the analyser reads silence,
+      // speech is never detected and the turn never ends on its own.
+      if (this.ctx.state === "suspended") void this.ctx.resume().catch(() => {});
       const source = this.ctx.createMediaStreamSource(this.stream);
       const analyser = this.ctx.createAnalyser();
       analyser.fftSize = 512;
@@ -249,23 +269,33 @@ export class RecorderListener implements SpeechListener {
         const rms = Math.sqrt(sum / data.length);
         this.handlers.onLevel?.(Math.min(1, rms * 6));
         const now = performance.now();
-        if (rms > 0.035) {
+        // Adaptive threshold: learn the room's noise floor in the first half-second, so quiet phone
+        // mics (with automatic gain control) still register speech and noisy rooms don't end turns early.
+        if (now - this.startedAt < 500) this.noiseFloor = Math.max(this.noiseFloor, rms);
+        const threshold = Math.min(0.05, Math.max(0.012, this.noiseFloor * 2.2));
+        if (rms > threshold && now - this.startedAt >= 300) {
           if (!this.heardSpeech) this.handlers.onSpeechStart?.();
           this.heardSpeech = true;
           this.silentSince = now;
-        } else if (this.heardSpeech && now - this.silentSince > 1500) {
-          return this.finish();
+        } else if (this.heardSpeech && now - this.silentSince > this.pauseMs) {
+          return this.stop();
         }
-        if (now - this.startedAt > 30000) return this.finish();
+        if (now - this.startedAt > 30000) return this.stop();
         this.raf = requestAnimationFrame(tick);
       };
       this.raf = requestAnimationFrame(tick);
     } catch {
-      /* level meter optional — user can tap to send */
+      // No speech detection: the user taps to send, and the recording is uploaded as-is.
+      this.manual = true;
     }
   }
 
   finish() {
+    this.manual = true;
+    this.stop();
+  }
+
+  private stop() {
     cancelAnimationFrame(this.raf);
     if (this.recorder && this.recorder.state !== "inactive") this.recorder.stop();
   }
@@ -275,7 +305,7 @@ export class RecorderListener implements SpeechListener {
     const blob = new Blob(this.chunks, { type });
     this.cleanup(); // the microphone is released before anything is sent
     if (this.aborted) return;
-    if (!this.heardSpeech || blob.size < 2000) {
+    if ((!this.heardSpeech && !this.manual) || blob.size < 2000) {
       this.handlers.onFinal("");
       return;
     }
@@ -289,7 +319,7 @@ export class RecorderListener implements SpeechListener {
       const res = await fetch("/api/transcribe", { method: "POST", body: form, signal: request.signal });
       const json = (await res.json().catch(() => ({}))) as { text?: string; error?: string };
       if (!res.ok) throw new Error(json.error ?? "Transcription failed.");
-      if (!this.aborted) this.handlers.onFinal(json.text ?? "");
+      if (!this.aborted) this.handlers.onFinal(cleanTranscript(json.text ?? ""));
     } catch (err) {
       if (this.aborted) return;
       const message = request.signal.aborted ? "Transcription took too long." : err instanceof Error ? err.message : "Transcription failed.";

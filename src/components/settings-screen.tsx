@@ -105,12 +105,12 @@ function SettingsInner() {
 
       <div className="space-y-6">
         {/* AI provider */}
-        <Section title="AI replies" description="Choose how Ari generates responses.">
+        <Section title="Smart replies" description="Choose how Ari generates responses.">
           <div className="grid gap-3 sm:grid-cols-2">
             {[
               {
                 value: "auto" as const,
-                title: "AI provider (Groq)",
+                title: "Smart replies (Groq)",
                 body: groq ? `Natural conversation powered by ${config?.model}.` : "Not configured — add GROQ_API_KEY to .env.local and restart.",
                 note: groq && !settings.consent.ai ? "Sends your messages to Groq. You'll be asked to agree first." : undefined,
                 selected: aiChosen,
@@ -180,7 +180,7 @@ function SettingsInner() {
           <div className="divide-y divide-border">
             <Switch
               id="consent-ai"
-              label="Send messages to the AI provider"
+              label="Send messages to Groq"
               description={`Your last ${LIMITS.contextWindow} messages are sent to Groq to generate a reply, after removing emails, phone numbers, addresses and similar identifiers. Turning this off switches to offline demo mode.`}
               checked={settings.consent.ai}
               disabled={!groq}
@@ -203,7 +203,7 @@ function SettingsInner() {
             />
           </div>
           <p className="mt-3 text-xs leading-relaxed text-subtle">
-            Messages that suggest someone may be in immediate danger are never sent to the AI provider — {APP.companion} responds with crisis resources directly.
+            Messages that suggest someone may be in immediate danger are never sent to Groq — {APP.companion} responds with crisis resources directly.
           </p>
         </Section>
 
@@ -235,6 +235,34 @@ function SettingsInner() {
                 />
               </div>
             )}
+            <div className="py-3">
+              <p className="text-[0.95rem] font-medium">Speech recognition</p>
+              <div className="mt-2 flex flex-wrap gap-2">
+                {[
+                  { v: "auto" as const, label: "Accurate (Groq Whisper)" },
+                  { v: "browser" as const, label: "Live captions (browser)" },
+                ].map((o) => {
+                  const selected = o.v === "browser" ? settings.voice.recognition === "browser" : settings.voice.recognition !== "browser";
+                  return (
+                    <button
+                      key={o.v}
+                      type="button"
+                      aria-pressed={selected}
+                      onClick={() => set((s) => ({ ...s, voice: { ...s.voice, recognition: o.v } }))}
+                      className={cn(
+                        "h-10 cursor-pointer rounded-full border px-4 text-sm font-medium transition-colors",
+                        selected ? "border-primary bg-primary-soft" : "border-border hover:bg-surface-2",
+                      )}
+                    >
+                      {o.label}
+                    </button>
+                  );
+                })}
+              </div>
+              <p className="mt-2 text-xs text-subtle">
+                Whisper understands accents and phone microphones much better; your words appear after you pause. It needs smart replies on — otherwise the browser&apos;s recogniser is used.
+              </p>
+            </div>
             <div className="py-3">
               <p className="text-[0.95rem] font-medium">Voice engine</p>
               <div className="mt-2 flex flex-wrap gap-2">
@@ -371,7 +399,7 @@ function SettingsInner() {
         onClose={() => setAskAiConsent(false)}
         onConfirm={() => set((s) => ({ ...s, aiMode: "auto", consent: { ...s.consent, ai: true, decidedAt: now() } }))}
         title="Send your messages to Groq?"
-        description={`To generate each reply, your last ${LIMITS.contextWindow} messages are sent to Groq, an AI provider, after emails, phone numbers, addresses and similar identifiers are removed. Messages that suggest someone may be in danger are never sent. You can switch back to the offline demo any time.`}
+        description={`To generate each reply, your last ${LIMITS.contextWindow} messages are sent to Groq (a language-model provider) after emails, phone numbers, addresses and similar identifiers are removed. Messages that suggest someone may be in danger are never sent. You can switch back to the offline demo any time.`}
         confirmLabel="Agree and use Groq"
         tone="primary"
       />

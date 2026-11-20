@@ -105,6 +105,11 @@ export interface Settings {
   voice: {
     output: boolean;
     engine: "browser" | "groq";
+    /**
+     * How the user's speech is recognised. "auto" uses Groq Whisper when AI replies are on (more
+     * accurate, especially on phones and with accents) and the browser's recogniser otherwise.
+     */
+    recognition?: "auto" | "browser" | "whisper";
     voiceName?: string;
     rate: number;
     /** Ari asks a gentle question when the user stays quiet in a voice session. */

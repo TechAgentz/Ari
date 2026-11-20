@@ -12,9 +12,13 @@ const inter = Inter({ subsets: ["latin"], variable: "--font-inter", display: "sw
 const lora = Lora({ subsets: ["latin"], variable: "--font-lora", display: "swap" });
 
 export const metadata: Metadata = {
-  title: { default: `${APP.name} — AI wellbeing companion (demo)`, template: `%s · ${APP.name}` },
-  description: "An interactive demo of a calm, private AI conversation companion. Not a medical or diagnostic tool.",
+  title: { default: `${APP.name} — virtual care assistant (demo)`, template: `%s · ${APP.name}` },
+  description: "An interactive demo of Ari, a calm, private virtual care assistant. Not a medical or diagnostic tool.",
   robots: { index: false, follow: false },
+  applicationName: APP.name,
+  // Opens full-screen when added to an iPhone home screen.
+  appleWebApp: { capable: true, title: APP.name, statusBarStyle: "black-translucent" },
+  formatDetection: { telephone: false },
 };
 
 export const viewport: Viewport = {

@@ -94,13 +94,19 @@ Adapting to the user:
 
 ## Voice support
 
-| Browser | Speech-to-text | Text-to-speech |
-| --- | --- | --- |
-| Chrome / Edge | Built-in recognition with live transcript. Audio is processed by the browser vendor's online service. | Device voices |
-| Safari (macOS/iOS) | Built-in recognition | Device voices |
-| Firefox / others | Recorded and transcribed by Groq Whisper (needs a key), otherwise typed input | Device voices |
+**Speech-to-text.** When smart replies (Groq) are on, each turn is recorded and transcribed by **Groq Whisper** in every browser. It handles accents and phone microphones much better than built-in recognisers, iOS especially. Your words appear after you pause. In Settings you can switch to **live browser captions** instead: Chrome and Edge use the browser maker's online service, and Safari uses Apple's. In offline mode the browser recogniser is used, or typing where none exists.
 
-With `GROQ_TTS_MODEL` set, you can choose Groq Orpheus in Settings. It falls back to device voices on any error.
+The recorder learns the room's noise level in the first half-second, so quiet phone mics still register speech. It resumes the audio context that iOS starts paused, and drops phantom phrases Whisper produces in silence ("Thanks for watching!"). "Send now" always uploads what was recorded.
+
+**Text-to-speech.** Device voices. With `GROQ_TTS_MODEL` set, you can choose Groq Orpheus in Settings. It falls back to device voices on any error.
+
+## How Ari presents itself
+
+Ari introduces itself as a **virtual care assistant working alongside your psychologist** (`APP.role` and `APP.careTeam` in `src/lib/config.ts`; change them to suit the practice). It doesn't call itself "an AI" unprompted, but it never claims to be a person, psychologist or clinician. If someone asks directly whether they're talking to a person or a bot, it answers honestly. This is a safety and consumer-protection requirement for a mental-health product.
+
+## Mobile
+
+The layout is phone-first with a bottom tab bar and safe-area padding. The app can be installed: in Safari, tap Share → Add to Home Screen; in Chrome, use Install app. It then opens full-screen with its own icon (`src/app/manifest.ts`, `apple-icon.tsx`). If a browser was set to offline mode, the chat and voice screens show a "Turn on smart replies" button.
 
 ## Prompt evaluation
 

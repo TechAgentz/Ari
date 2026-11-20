@@ -43,7 +43,7 @@ export default function SupportPage() {
       <PageHeader
         eyebrow="Get help now"
         title="You deserve support from a real person"
-        description={`${APP.companion} is an AI and can't help in an emergency. These free, confidential services can — any time of day or night.`}
+        description={`${APP.companion} is a ${APP.role} and can't help in an emergency. These free, confidential services can — any time of day or night.`}
       />
 
       <div role="alert" className="flex items-start gap-4 rounded-3xl border border-danger/30 bg-danger-soft p-5 sm:p-6">
