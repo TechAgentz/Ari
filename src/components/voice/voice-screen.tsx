@@ -11,7 +11,6 @@ import { Card } from "@/components/ui/primitives";
 import { VoiceConsentDialog } from "@/components/voice-consent";
 import { APP } from "@/lib/config";
 import { settingsStore, updateSettings, upsertConversation, useHydrated } from "@/lib/storage";
-import { OfflineNotice } from "@/components/offline-notice";
 import { getCachedServerConfig, useServerConfig } from "@/lib/use-server-config";
 import { cn } from "@/lib/utils";
 import { VoiceController, detectInputMode, voiceEngine, type VoiceStatus } from "@/lib/voice/controller";
@@ -199,7 +198,6 @@ function VoiceSession() {
         <div className="mt-4 flex flex-wrap items-center justify-center gap-2">
           <ProviderBadge mode="voice" />
         </div>
-        <OfflineNotice className="mt-4" />
         <button
           type="button"
           onClick={begin}

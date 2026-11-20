@@ -601,10 +601,11 @@ async function main() {
     gum.deferred = false;
   }
 
-  // ───────────────────────── 7. Offline mode keeps voice on-device (PRIVACY-1 / SRV-3 / COMP-8) ─────────────────────────
-  console.log("\n7. Groq speech services only with AI replies on");
+  // ───────────────────────── 7. Groq is always used when configured (no user-selectable offline mode) ─────────────────────────
+  console.log("\n7. Groq speech services whenever the server has a key");
   {
-    check("no recognition + offline → typed replies (no Whisper)", detectInputMode(GROQ, makeSettings(false)) === "text");
+    check("no offline mode: old 'demo' settings still use Whisper", detectInputMode(GROQ, makeSettings(false)) === "server");
+    check("Groq not configured → typed replies (no Whisper)", detectInputMode({ ...GROQ, groqConfigured: false, stt: false }, makeSettings(true)) === "text");
     check("no recognition + AI on → Whisper", detectInputMode(GROQ, makeSettings(true)) === "server");
     check("no settings → never Whisper", detectInputMode(GROQ) === "text");
     setRecognition(true);
@@ -612,24 +613,24 @@ async function main() {
     const prefersBrowser = makeSettings(true);
     prefersBrowser.voice.recognition = "browser";
     check("live-captions preference → browser recogniser", detectInputMode(GROQ, prefersBrowser) === "browser");
-    check("browser recogniser + offline → browser (no Whisper)", detectInputMode(GROQ, makeSettings(false)) === "browser");
+    check("browser recogniser + Groq not configured → browser", detectInputMode({ ...GROQ, groqConfigured: false, stt: false }, makeSettings(true)) === "browser");
     setRecognition(false);
     const { cleanTranscript } = await import("../src/lib/voice/recognition");
     check("Whisper phantom 'Thanks for watching!' dropped", cleanTranscript(" Thanks for watching! ") === "");
     check("real 'Thank you.' kept", cleanTranscript("Thank you.") === "Thank you.");
-    check("Orpheus chosen + offline → device voice", voiceEngine(makeSettings(false, "groq"), GROQ) === "browser");
+
     check("Orpheus chosen + AI on → Orpheus", voiceEngine(makeSettings(true, "groq"), GROQ) === "groq");
     check("Orpheus chosen but not configured → device voice", voiceEngine(makeSettings(true, "groq"), { ...GROQ, tts: false }) === "browser");
 
     fetchLog.length = 0;
-    const { c, status } = session(makeSettings(false, "groq"), GROQ);
+    const { c, status } = session(makeSettings(false, "groq"), null);
     await c.start();
-    check("offline session: typed input with an accurate notice", c.getSnapshot().inputMode === "text" && /only sent to Groq Whisper when smart replies are on/.test(c.getSnapshot().notice ?? ""), c.getSnapshot().notice);
+    check("Groq not configured: typed input", c.getSnapshot().inputMode === "text", c.getSnapshot().inputMode);
     await until(() => status() === "listening");
     c.sendText("You can call me Sam");
     await until(() => status() === "listening" && c.getSnapshot().messages.length === 3);
     await wait(60);
-    check("offline session: nothing sent anywhere (no /api/tts, /api/transcribe, /api/chat)", fetchLog.length === 0, fetchLog);
+    check("Groq not configured: nothing sent anywhere (no /api/tts, /api/transcribe, /api/chat)", fetchLog.length === 0, fetchLog);
     c.dispose();
 
     fetchLog.length = 0;
@@ -639,19 +640,6 @@ async function main() {
     check("AI on + Orpheus: greeting goes to /api/tts (then falls back to device voice)", fetchLog.includes("/api/tts"), fetchLog);
     r.c.dispose();
 
-    // AI replies switched off mid-session: no more recordings to Groq.
-    const settings = makeSettings(true);
-    const m = session(settings, GROQ);
-    await m.c.start();
-    await until(() => m.status() === "listening");
-    settings.aiMode = "demo";
-    settings.consent.ai = false;
-    m.c.sendText("Fine thanks");
-    const callsBefore = gum.calls;
-    await until(() => m.status() === "listening" && m.c.getSnapshot().messages.length === 3);
-    await settle();
-    check("AI switched off mid-session → typed input, no new recording", m.c.getSnapshot().inputMode === "text" && gum.calls === callsBefore, { mode: m.c.getSnapshot().inputMode });
-    m.c.dispose();
   }
 
   // ───────────────────────── 8. Typed mode and safety flags (VOICE-7, SAFETY-5) ─────────────────────────

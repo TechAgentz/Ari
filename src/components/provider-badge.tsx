@@ -1,6 +1,6 @@
 "use client";
 
-import { Cloud, CloudOff, Sparkles } from "lucide-react";
+import { CloudOff, Sparkles } from "lucide-react";
 import { usesRemoteAI } from "@/lib/agent/client";
 import { settingsStore } from "@/lib/storage";
 import { useServerConfig } from "@/lib/use-server-config";
@@ -20,11 +20,10 @@ export function ProviderBadge({ mode = "chat" }: { mode?: "chat" | "voice" }) {
       </Badge>
     );
   }
-  const why = !config?.groqConfigured ? "No AI provider configured on the server" : !settings.consent.ai ? "AI replies need your consent (Settings)" : "Offline mode selected";
   return (
-    <Badge title={why}>
-      {config?.groqConfigured ? <Cloud className="h-3.5 w-3.5" /> : <CloudOff className="h-3.5 w-3.5" />}
-      Offline demo
+    <Badge title="GROQ_API_KEY isn't set on the server">
+      <CloudOff className="h-3.5 w-3.5" />
+      Groq not configured
     </Badge>
   );
 }

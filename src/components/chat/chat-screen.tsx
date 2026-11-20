@@ -28,7 +28,6 @@ import {
   useHydrated,
 } from "@/lib/storage";
 import type { ChatMessage, Conversation, MessageMeta, TopicId } from "@/lib/types";
-import { OfflineNotice } from "@/components/offline-notice";
 import { useServerConfig } from "@/lib/use-server-config";
 import { now, titleFromMessage, uid } from "@/lib/utils";
 import { Composer } from "./composer";
@@ -306,9 +305,8 @@ function ChatSession({
         <div className="mx-auto flex max-w-3xl flex-col gap-5 px-4 py-6 sm:px-6" aria-live="polite" aria-relevant="additions">
           <p className="mx-auto flex max-w-md items-center gap-2 rounded-full bg-surface-2 px-4 py-2 text-center text-xs text-muted">
             <ShieldCheck className="h-4 w-4 shrink-0 text-primary" />
-            {remote ? "Saved only in this browser. Contact details are removed before messages reach Groq." : "Saved only in this browser. Offline demo — nothing leaves your device."}
+            {remote ? "Saved only in this browser. Contact details are removed before messages reach Groq." : "Saved only in this browser."}
           </p>
-          <OfflineNotice />
           {messages.map((m) => (
             <div key={m.id}>
               <MessageBubble message={m} />

@@ -52,16 +52,16 @@ export function Onboarding() {
   if (!hydrated || settings.onboarded || pathname === "/support") return null;
   const groq = !!config?.groqConfigured;
 
-  // Consent is given by the button the user presses: "Agree and start" (Groq) or "Continue offline".
-  const finish = (aiConsent: boolean) => {
+  // Replies always come from Groq; pressing "Agree and start" records that the user was told so.
+  const finish = () => {
     updateSettings((s) => ({
       ...s,
       onboarded: true,
-      aiMode: groq && aiConsent ? "auto" : "demo",
+      aiMode: "auto",
       consent: {
         ...s.consent,
-        ai: groq && aiConsent,
-        context: groq && aiConsent && contextConsent,
+        ai: true,
+        context: contextConsent,
         decidedAt: now(),
       },
     }));
@@ -118,21 +118,11 @@ export function Onboarding() {
           <p className="text-sm leading-relaxed">
             {loading ? (
               "Checking configuration…"
-            ) : groq ? (
-              <>
-                <strong className="font-semibold">
-                  With smart replies on,
-                </strong>{" "}
-                your recent messages are sent to Groq to generate responses.
-                Emails, phone numbers and addresses are removed first.
-              </>
             ) : (
               <>
-                <strong className="font-semibold">
-                  This demo is running in offline mode.
-                </strong>{" "}
-                {APP.companion} uses a scripted conversation engine — nothing
-                leaves your device.
+                <strong className="font-semibold">How replies work:</strong>{" "}
+                your recent messages are sent to Groq to generate responses.
+                Emails, phone numbers and addresses are removed first.
               </>
             )}
           </p>
@@ -140,17 +130,13 @@ export function Onboarding() {
       </ul>
 
       <div className="mt-5 space-y-2.5">
-        {groq && (
-          <>
-            <Check
-              checked={contextConsent}
-              onChange={(v) => setContextConsent(v)}
-            >
-              Optional: let {APP.companion} include details I share (like my
-              first name or hobbies) so replies feel more personal.
-            </Check>
-          </>
-        )}
+        <Check
+          checked={contextConsent}
+          onChange={(v) => setContextConsent(v)}
+        >
+          Optional: let {APP.companion} include details I share (like my
+          first name or hobbies) so replies feel more personal.
+        </Check>
         <Check checked={sample} onChange={setSample}>
           Load fictional sample conversations and mood entries to explore the
           demo.
@@ -162,29 +148,17 @@ export function Onboarding() {
         <div className="flex flex-col gap-2 sm:flex-row-reverse">
           <button
             type="button"
-            onClick={() => finish(groq)}
+            onClick={finish}
             disabled={loading}
             className="h-12 flex-1 cursor-pointer rounded-full bg-primary px-6 font-semibold text-primary-fg shadow-soft transition-colors hover:bg-primary-hover disabled:opacity-50"
           >
-            {groq ? "Agree and start" : "Get started"}
+            Agree and start
           </button>
-          {groq && (
-            <button
-              type="button"
-              onClick={() => finish(false)}
-              disabled={loading}
-              className="h-12 flex-1 cursor-pointer rounded-full border border-border px-6 text-sm font-medium transition-colors hover:bg-surface-2 disabled:opacity-50"
-            >
-              Continue offline (scripted replies)
-            </button>
-          )}
         </div>
         <p className="mt-3 text-center text-xs text-subtle">
-          {groq
-            ? "“Agree and start” means you agree to your messages (and voice recordings) being sent to Groq to generate replies. "
-            : ""}
-          You can change these choices any time in Settings. Voice conversations
-          ask for separate permission.
+          “Agree and start” means you agree to your messages (and voice
+          recordings) being sent to Groq to generate replies. Voice
+          conversations ask for microphone permission separately.
         </p>
       </div>
     </Dialog>

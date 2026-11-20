@@ -468,7 +468,7 @@ export class VoiceController {
       messages: [...this.snap.messages, assistant],
       streaming: "",
       streamingMeta: null,
-      notice: result.meta.fallback ? "Groq was unavailable, so Ari answered in offline mode." : this.snap.notice,
+      notice: result.meta.fallback ? "Groq was busy, so Ari used a backup reply." : this.snap.notice,
       ...this.safetyPatch(result.meta.safety === "crisis" || result.meta.safety === "distress", result.meta.safetyCategories),
     });
     this.save();

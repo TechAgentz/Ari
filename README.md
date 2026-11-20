@@ -74,7 +74,7 @@ See [docs/conversation-engine.md](docs/conversation-engine.md) for the design an
 - **`examples.ts`** holds 13 short, fictional example exchanges (few-shot examples). They show Ari's tone and boundaries: reflect first, one question, accept skips, no diagnosis, honest AI disclosure, gentle safety checks, and spoken style in voice mode. Only the 1–3 that fit the current moment go into each prompt (voice gets only safety and boundary examples), adding about 250–300 tokens. Safety situations always win the selection.
 - **`turn.ts`** prepares each turn: redaction, analysis, risk screening, retrieval and the prompt. `/api/chat` and `scripts/prompt-eval.ts` share it, so the evaluation tests exactly what users get.
 - **`prompt.ts`** is the Groq system prompt. It covers persona, style, boundaries (no diagnosis, AI disclosure, banned openers) and the current stage. It also includes a hint for the next topic, topics already covered or declined, consented memory, and retrieved knowledge.
-- **`demo-engine.ts`** is the scripted fallback. It builds each reply as a reflection, optional knowledge or technique, and one question. It is used in offline mode, when consent hasn't been given, and whenever Groq fails.
+- **`demo-engine.ts`** is the scripted fallback. It builds each reply as a reflection, optional knowledge or technique, and one question. There is no user-selectable offline mode: it only answers when the server has no Groq key, or when Groq fails or hits a rate limit mid-conversation.
 - **`knowledge/`** holds the knowledge base and keyword retrieval, which feeds reference notes to the model and source chips to the UI.
 
 Adapting to the user:
@@ -94,7 +94,7 @@ Adapting to the user:
 
 ## Voice support
 
-**Speech-to-text.** When smart replies (Groq) are on, each turn is recorded and transcribed by **Groq Whisper** in every browser. It handles accents and phone microphones much better than built-in recognisers, iOS especially. Your words appear after you pause. In Settings you can switch to **live browser captions** instead: Chrome and Edge use the browser maker's online service, and Safari uses Apple's. In offline mode the browser recogniser is used, or typing where none exists.
+**Speech-to-text.** Each turn is recorded and transcribed by **Groq Whisper** in every browser. It handles accents and phone microphones much better than built-in recognisers, iOS especially. Your words appear after you pause. In Settings you can switch to **live browser captions** instead: Chrome and Edge use the browser maker's online service, and Safari uses Apple's. Without a Groq key on the server, the browser recogniser is used, or typing where none exists.
 
 The recorder learns the room's noise level in the first half-second, so quiet phone mics still register speech. It resumes the audio context that iOS starts paused, and drops phantom phrases Whisper produces in silence ("Thanks for watching!"). "Send now" always uploads what was recorded.
 
@@ -104,9 +104,13 @@ The recorder learns the room's noise level in the first half-second, so quiet ph
 
 Ari introduces itself as a **virtual care assistant working alongside your psychologist** (`APP.role` and `APP.careTeam` in `src/lib/config.ts`; change them to suit the practice). It doesn't call itself "an AI" unprompted, but it never claims to be a person, psychologist or clinician. If someone asks directly whether they're talking to a person or a bot, it answers honestly. This is a safety and consumer-protection requirement for a mental-health product.
 
+## Groq is always on
+
+There is no offline mode to choose. Whenever the server has a `GROQ_API_KEY`, every browser uses Groq for replies and Whisper for speech, including browsers that chose offline mode in an earlier version. The welcome screen has a single **Agree and start** button that explains what is sent to Groq. Personal-context sharing and voice remain separate opt-ins. Messages that suggest someone may be in danger are still never sent.
+
 ## Mobile
 
-The layout is phone-first with a bottom tab bar and safe-area padding. The app can be installed: in Safari, tap Share → Add to Home Screen; in Chrome, use Install app. It then opens full-screen with its own icon (`src/app/manifest.ts`, `apple-icon.tsx`). If a browser was set to offline mode, the chat and voice screens show a "Turn on smart replies" button.
+The layout is phone-first with a bottom tab bar and safe-area padding. The app can be installed: in Safari, tap Share → Add to Home Screen; in Chrome, use Install app. It then opens full-screen with its own icon (`src/app/manifest.ts`, `apple-icon.tsx`).
 
 ## Prompt evaluation
 

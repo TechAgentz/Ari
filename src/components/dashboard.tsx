@@ -135,7 +135,7 @@ export function Dashboard() {
             icon: Settings,
             title: "Settings",
             body: "Privacy, consent, voice and data.",
-            stat: hydrated ? (remote ? "Smart replies on" : "Offline demo") : "—",
+            stat: hydrated ? (remote ? "Smart replies on" : "Setup needed") : "—",
             tone: "bg-surface-3 text-fg",
           },
         ].map(({ href, icon: Icon, title, body, stat, tone }, i) => (

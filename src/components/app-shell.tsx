@@ -39,7 +39,7 @@ export function AppShell({ children }: { children: ReactNode }) {
           <Logo />
           <div>
             <p className="font-serif text-xl font-semibold leading-none">{APP.name}</p>
-            <p className="mt-1 text-xs text-muted">Guest · Demo mode</p>
+            <p className="mt-1 text-xs text-muted">Guest</p>
           </div>
         </Link>
         <nav aria-label="Main" className="flex flex-col gap-1">
